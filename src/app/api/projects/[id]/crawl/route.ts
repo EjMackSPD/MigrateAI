@@ -71,12 +71,33 @@ export async function POST(
     }
 
     // Queue crawl job
-    await crawlQueue.add('crawl', {
-      projectId: params.id,
-      config,
-    }, {
-      jobId: job.id,
-    })
+    try {
+      await crawlQueue.add('crawl', {
+        projectId: params.id,
+        config,
+      }, {
+        jobId: job.id,
+      })
+    } catch (queueError) {
+      // If queue fails, update job status
+      await prisma.job.update({
+        where: { id: job.id },
+        data: {
+          status: 'failed',
+          errorMessage: queueError instanceof Error ? queueError.message : 'Failed to queue job',
+          completedAt: new Date(),
+        },
+      })
+      
+      console.error('Error queuing crawl job:', queueError)
+      return NextResponse.json(
+        { 
+          error: 'Failed to queue crawl job. Please ensure Redis is running and REDIS_URL is configured correctly.',
+          details: queueError instanceof Error ? queueError.message : 'Unknown error'
+        },
+        { status: 500 }
+      )
+    }
 
     return NextResponse.json({
       jobId: job.id,
@@ -93,7 +114,10 @@ export async function POST(
 
     console.error('Error starting crawl:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        error: 'Internal server error',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     )
   }

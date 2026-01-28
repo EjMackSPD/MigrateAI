@@ -2,14 +2,40 @@ import { Anthropic } from '@anthropic-ai/sdk'
 import { getEmbeddingService } from './embeddings'
 
 export class AnalysisService {
-  private claude: Anthropic
-  private embeddingService: ReturnType<typeof getEmbeddingService>
+  private claude: Anthropic | null = null
+  private embeddingService: ReturnType<typeof getEmbeddingService> | null = null
 
   constructor() {
-    this.claude = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY || '',
-    })
-    this.embeddingService = getEmbeddingService()
+    const apiKey = process.env.ANTHROPIC_API_KEY
+    if (apiKey) {
+      this.claude = new Anthropic({ apiKey })
+    }
+
+    // Try to initialize embedding service, but don't fail if not configured
+    try {
+      this.embeddingService = getEmbeddingService()
+    } catch (error) {
+      console.warn('Embedding service not available:', error instanceof Error ? error.message : 'Unknown error')
+      this.embeddingService = null
+    }
+  }
+
+  private ensureClaudeConfigured() {
+    if (!this.claude) {
+      throw new Error(
+        'ANTHROPIC_API_KEY is not configured. Please add it to your .env.local file. ' +
+        'See API_KEYS_SETUP.md for instructions.'
+      )
+    }
+  }
+
+  private ensureEmbeddingConfigured() {
+    if (!this.embeddingService) {
+      throw new Error(
+        'No embedding service configured. Please set VOYAGE_API_KEY or OPENAI_API_KEY in your .env.local file. ' +
+        'See API_KEYS_SETUP.md for instructions.'
+      )
+    }
   }
 
   async analyzePage(pageId: string, content: string): Promise<{
@@ -17,8 +43,12 @@ export class AnalysisService {
     topics: string[]
     qualityScore: number
   }> {
+    // Ensure services are configured
+    this.ensureEmbeddingConfigured()
+    this.ensureClaudeConfigured()
+
     // Generate embedding
-    const embedding = await this.embeddingService.embedText(content)
+    const embedding = await this.embeddingService!.embedText(content)
 
     // Extract topics using Claude
     const topics = await this.extractTopics(content)
@@ -34,6 +64,8 @@ export class AnalysisService {
   }
 
   private async extractTopics(content: string): Promise<string[]> {
+    this.ensureClaudeConfigured()
+    
     try {
       const prompt = `Analyze the following web page content and extract 3-7 main topics or themes.
 Return only the topics as a JSON array of strings.
@@ -44,7 +76,7 @@ ${content.substring(0, 8000)}
 
 Topics (JSON array):`
 
-      const response = await this.claude.messages.create({
+      const response = await this.claude!.messages.create({
         model: 'claude-3-5-sonnet-20241022',
         max_tokens: 500,
         messages: [
@@ -95,10 +127,12 @@ Topics (JSON array):`
   }
 
   async generateEmbedding(text: string): Promise<number[]> {
-    return this.embeddingService.embedText(text)
+    this.ensureEmbeddingConfigured()
+    return this.embeddingService!.embedText(text)
   }
 
   async generateEmbeddingsBatch(texts: string[]): Promise<number[][]> {
-    return this.embeddingService.embedBatch(texts)
+    this.ensureEmbeddingConfigured()
+    return this.embeddingService!.embedBatch(texts)
   }
 }

@@ -11,12 +11,22 @@ export interface GenerationConfig {
 }
 
 export class GenerationService {
-  private claude: Anthropic
+  private claude: Anthropic | null = null
 
   constructor() {
-    this.claude = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY || '',
-    })
+    const apiKey = process.env.ANTHROPIC_API_KEY
+    if (apiKey) {
+      this.claude = new Anthropic({ apiKey })
+    }
+  }
+
+  private ensureConfigured() {
+    if (!this.claude) {
+      throw new Error(
+        'ANTHROPIC_API_KEY is not configured. Please add it to your .env.local file. ' +
+        'See API_KEYS_SETUP.md for instructions.'
+      )
+    }
   }
 
   async generateDraft(
@@ -61,8 +71,11 @@ export class GenerationService {
       config.additionalGuidance
     )
 
+    // Ensure API key is configured
+    this.ensureConfigured()
+
     // Generate content
-    const response = await this.claude.messages.create({
+    const response = await this.claude!.messages.create({
       model: 'claude-3-5-sonnet-20241022',
       max_tokens: 4096,
       system: GEO_SYSTEM_PROMPT,

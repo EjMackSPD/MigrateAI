@@ -131,6 +131,9 @@ export function getEmbeddingService(): EmbeddingService {
   } else if (process.env.EMBEDDING_API_KEY || process.env.OPENAI_API_KEY) {
     return new OpenAIEmbeddingService()
   } else {
-    throw new Error('No embedding service API key configured')
+    throw new Error(
+      'No embedding service API key configured. Please set VOYAGE_API_KEY or OPENAI_API_KEY in your .env.local file. ' +
+      'See API_KEYS_SETUP.md for instructions.'
+    )
   }
 }

@@ -46,6 +46,27 @@ export async function POST(
     const body = await request.json()
     const validated = analyzeConfigSchema.parse(body)
 
+    // Check if required API keys are configured
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return NextResponse.json(
+        { 
+          error: 'ANTHROPIC_API_KEY is not configured. Please add it to your .env.local file.',
+          hint: 'See API_KEYS_SETUP.md for instructions on obtaining API keys.'
+        },
+        { status: 400 }
+      )
+    }
+
+    if (!process.env.VOYAGE_API_KEY && !process.env.EMBEDDING_API_KEY && !process.env.OPENAI_API_KEY) {
+      return NextResponse.json(
+        { 
+          error: 'No embedding service API key configured. Please set VOYAGE_API_KEY or OPENAI_API_KEY in your .env.local file.',
+          hint: 'See API_KEYS_SETUP.md for instructions on obtaining API keys.'
+        },
+        { status: 400 }
+      )
+    }
+
     // Create job record
     const job = await prisma.job.create({
       data: {
@@ -79,7 +100,10 @@ export async function POST(
 
     console.error('Error starting analysis:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        error: 'Internal server error',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     )
   }
