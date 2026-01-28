@@ -1,0 +1,256 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  emailVerified DateTime?
+  name          String?
+  password      String    // Hashed password for credentials provider
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  accounts      Account[]
+  sessions      Session[]
+  projects      ProjectMember[]
+  createdProjects Project[] @relation("ProjectOwner")
+  approvedDrafts Draft[]   @relation("DraftApprover")
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(uuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+model Project {
+  id          String   @id @default(uuid())
+  name        String
+  clientName  String   @map("client_name")
+  baseUrl     String   @map("base_url")
+  description String?   @db.Text
+  status      String   @default("active") // active, paused, completed, archived
+  settings    Json     @default("{}")
+  ownerId     String   @map("owner_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  owner       User            @relation("ProjectOwner", fields: [ownerId], references: [id])
+  members     ProjectMember[]
+  pages       Page[]
+  pillars     Pillar[]
+  jobs        Job[]
+
+  @@index([status])
+  @@index([clientName])
+  @@map("projects")
+}
+
+model ProjectMember {
+  id        String   @id @default(uuid())
+  projectId String   @map("project_id")
+  userId    String   @map("user_id")
+  role      String   @default("member") // owner, admin, member
+  createdAt DateTime @default(now()) @map("created_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@index([projectId])
+  @@index([userId])
+  @@map("project_members")
+}
+
+model Page {
+  id              String    @id @default(uuid())
+  projectId       String    @map("project_id")
+  url             String    @db.VarChar(2000)
+  urlHash         String    @map("url_hash") @db.VarChar(64)
+  title           String?   @db.VarChar(500)
+  metaDescription String?   @map("meta_description") @db.Text
+  rawHtml         String?   @map("raw_html") @db.Text
+  extractedContent String?  @map("extracted_content") @db.Text
+  wordCount       Int?
+  contentType     String?   @map("content_type") @db.VarChar(50)
+  detectedTopics  String[]  @map("detected_topics")
+  qualityScore    Decimal?  @map("quality_score") @db.Decimal(3, 2)
+  embedding       Unsupported("vector(1536)")? // pgvector type
+  crawlDepth      Int?      @map("crawl_depth")
+  status          String    @default("crawled") // crawled, analyzed, matched, used
+  crawledAt       DateTime  @default(now()) @map("crawled_at")
+  analyzedAt      DateTime? @map("analyzed_at")
+
+  // Relations
+  project Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  matches Match[]
+
+  @@unique([projectId, urlHash])
+  @@index([projectId])
+  @@index([status])
+  @@index([contentType])
+  @@map("pages")
+}
+
+model Pillar {
+  id             String   @id @default(uuid())
+  projectId      String   @map("project_id")
+  name           String
+  slug           String
+  description    String   @db.Text
+  targetAudience String?  @map("target_audience") @db.Text
+  keyThemes      String[] @map("key_themes")
+  toneNotes      String?  @map("tone_notes") @db.Text
+  primaryKeywords String[] @map("primary_keywords")
+  priority       Int      @default(0)
+  status         String   @default("active") // active, paused, completed
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  project Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  matches Match[]
+  drafts  Draft[]
+
+  @@unique([projectId, slug])
+  @@index([projectId])
+  @@index([status])
+  @@map("pillars")
+}
+
+model Match {
+  id            String   @id @default(uuid())
+  pageId        String   @map("page_id")
+  pillarId      String   @map("pillar_id")
+  relevanceScore Decimal? @map("relevance_score") @db.Decimal(5, 4)
+  isSelected    Boolean  @default(false) @map("is_selected")
+  isExcluded    Boolean  @default(false) @map("is_excluded")
+  matchedAt     DateTime @default(now()) @map("matched_at")
+  selectedAt    DateTime? @map("selected_at")
+
+  // Relations
+  page   Page   @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  pillar Pillar @relation(fields: [pillarId], references: [id], onDelete: Cascade)
+
+  @@unique([pageId, pillarId])
+  @@index([pillarId])
+  @@index([pageId])
+  @@index([pillarId, isSelected])
+  @@map("matches")
+}
+
+model Draft {
+  id                  String   @id @default(uuid())
+  pillarId            String   @map("pillar_id")
+  title               String   @db.VarChar(500)
+  slug                String
+  content             String   @db.Text
+  contentType         String   @map("content_type") @db.VarChar(50)
+  sourcePageIds       String[] @map("source_page_ids")
+  schemaRecommendations Json?  @map("schema_recommendations")
+  generationPrompt    String?  @map("generation_prompt") @db.Text
+  status              String   @default("draft") // draft, in_review, approved, exported
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+  approvedAt          DateTime? @map("approved_at")
+  approvedById        String?   @map("approved_by_id")
+  exportedAt          DateTime? @map("exported_at")
+
+  // Relations
+  pillar      Pillar          @relation(fields: [pillarId], references: [id], onDelete: Cascade)
+  approvedBy  User?           @relation("DraftApprover", fields: [approvedById], references: [id])
+  versions    DraftVersion[]
+
+  @@unique([pillarId, slug])
+  @@index([pillarId])
+  @@index([status])
+  @@map("drafts")
+}
+
+model DraftVersion {
+  id          String   @id @default(uuid())
+  draftId     String   @map("draft_id")
+  content     String   @db.Text
+  versionNumber Int    @map("version_number")
+  changeNotes String?  @map("change_notes") @db.Text
+  createdBy   String?  @map("created_by")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relations
+  draft Draft @relation(fields: [draftId], references: [id], onDelete: Cascade)
+
+  @@unique([draftId, versionNumber])
+  @@index([draftId])
+  @@map("draft_versions")
+}
+
+model Job {
+  id            String   @id @default(uuid())
+  projectId     String?  @map("project_id")
+  jobType       String   @map("job_type") @db.VarChar(50) // crawl, analyze, match, generate
+  status        String   @default("pending") // pending, running, completed, failed
+  progress      Int      @default(0)
+  totalItems    Int?
+  processedItems Int     @default(0) @map("processed_items")
+  errorMessage  String?  @map("error_message") @db.Text
+  metadata      Json     @default("{}")
+  startedAt     DateTime? @map("started_at")
+  completedAt   DateTime? @map("completed_at")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  // Relations
+  project Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([status])
+  @@index([jobType])
+  @@map("jobs")
+}

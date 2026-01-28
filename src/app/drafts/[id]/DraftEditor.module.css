@@ -1,0 +1,303 @@
+.container {
+  max-width: 1400px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1a202c;
+  margin: 0;
+}
+
+.actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.toggleButton,
+.saveButton,
+.approveButton {
+  padding: 0.5rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  background: white;
+  color: #4a5568;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.toggleButton:hover {
+  background: #f7fafc;
+}
+
+.saveButton {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+}
+
+.saveButton:hover:not(:disabled) {
+  background: #5568d3;
+}
+
+.saveButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.approveButton {
+  background: #48bb78;
+  color: white;
+  border-color: #48bb78;
+}
+
+.approveButton:hover {
+  background: #38a169;
+}
+
+.error {
+  padding: 1rem;
+  background: #fee2e2;
+  color: #dc2626;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.statusBar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  padding: 0.75rem;
+  background: white;
+  border-radius: 4px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.statusLabel {
+  font-weight: 500;
+  color: #4a5568;
+}
+
+.status {
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.status.draft {
+  background: #e2e8f0;
+  color: #4a5568;
+}
+
+.status.in_review {
+  background: #bee3f8;
+  color: #2c5282;
+}
+
+.status.approved {
+  background: #c6f6d5;
+  color: #22543d;
+}
+
+.status.exported {
+  background: #faf089;
+  color: #744210;
+}
+
+.editorLayout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+.sourcesPanel {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.sourcesPanel h3 {
+  margin: 0 0 1rem 0;
+  color: #1a202c;
+}
+
+.sourceCard {
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.sourceCard h4 {
+  margin: 0 0 0.5rem 0;
+  color: #1a202c;
+  font-size: 1rem;
+}
+
+.sourceLink {
+  display: block;
+  color: #667eea;
+  text-decoration: none;
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+
+.sourceLink:hover {
+  text-decoration: underline;
+}
+
+.sourceContent {
+  font-size: 0.875rem;
+  color: #718096;
+  line-height: 1.5;
+}
+
+.editorArea {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.titleInput {
+  margin-bottom: 1rem;
+}
+
+.titleField {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.editor {
+  width: 100%;
+  min-height: 600px;
+  padding: 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.preview {
+  min-height: 600px;
+  padding: 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  background: #f7fafc;
+  line-height: 1.8;
+}
+
+.preview h1,
+.preview h2,
+.preview h3 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  color: #1a202c;
+}
+
+.preview p {
+  margin-bottom: 1rem;
+  color: #4a5568;
+}
+
+.changeNotes {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.changeNotes label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.changeNotesInput {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
+
+.versions {
+  margin-top: 2rem;
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.versions h3 {
+  margin: 0 0 1rem 0;
+  color: #1a202c;
+}
+
+.versionList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.versionItem {
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+}
+
+.versionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.versionNumber {
+  font-weight: 600;
+  color: #1a202c;
+}
+
+.versionDate {
+  font-size: 0.875rem;
+  color: #718096;
+}
+
+.versionNotes {
+  font-size: 0.875rem;
+  color: #4a5568;
+  margin: 0.5rem 0;
+}
+
+.versionAuthor {
+  font-size: 0.75rem;
+  color: #a0aec0;
+  margin: 0;
+}
+
+@media (min-width: 1024px) {
+  .editorLayout {
+    grid-template-columns: 300px 1fr;
+  }
+}
