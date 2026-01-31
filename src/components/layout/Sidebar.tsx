@@ -35,6 +35,12 @@ export default function Sidebar({ projects = [] }: SidebarProps) {
         >
           All Projects
         </Link>
+        <Link
+          href="/jobs"
+          className={`${styles.navLink} ${isActive('/jobs') ? styles.active : ''}`}
+        >
+          All Jobs
+        </Link>
       </nav>
 
       {projects.length > 0 && (

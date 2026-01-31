@@ -55,6 +55,13 @@ Your job is to:
 
 Return ONLY the Markdown content. Do not include explanations or commentary outside the content itself.
 
-Use the exact template structure for the specified content type. Include HTML comments at the end for metadata (source URLs, schema recommendations).
+Use the exact template structure for the specified content type. For glossary content, ensure:
+- All terms are organized alphabetically by first letter
+- Each term has a clear 20-40 word definition
+- Related terms are cross-referenced
+- A comprehensive quick reference table is included at the end
+- The structure follows the glossary template exactly
+
+Include HTML comments at the end for metadata (source URLs, schema recommendations). For glossaries, use DefinedTermSet schema.
 
 If the source content is insufficient for a complete piece, note gaps with [NEEDS: description of what's missing] so the editor knows what to add.`

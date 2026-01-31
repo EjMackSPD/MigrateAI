@@ -111,6 +111,16 @@
   padding: 1rem;
   border: 1px solid #e2e8f0;
   border-radius: 4px;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+
+.jobCard:hover {
+  border-color: #667eea;
+  box-shadow: 0 2px 4px rgba(102, 126, 234, 0.1);
+  transform: translateY(-2px);
 }
 
 .jobHeader {

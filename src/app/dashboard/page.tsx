@@ -3,6 +3,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { redirect } from 'next/navigation'
 import MainLayout from '@/components/layout/MainLayout'
+import Link from 'next/link'
 import styles from './Dashboard.module.css'
 
 export default async function DashboardPage() {
@@ -174,7 +175,11 @@ export default async function DashboardPage() {
             ) : (
               <div className={styles.jobList}>
                 {recentJobs.map((job) => (
-                  <div key={job.id} className={styles.jobCard}>
+                  <Link
+                    key={job.id}
+                    href={`/jobs/${job.id}`}
+                    className={styles.jobCard}
+                  >
                     <div className={styles.jobHeader}>
                       <span className={styles.jobType}>{job.jobType}</span>
                       <span className={`${styles.jobStatus} ${styles[job.status]}`}>
@@ -190,7 +195,7 @@ export default async function DashboardPage() {
                         />
                       </div>
                     )}
-                  </div>
+                  </Link>
                 ))}
               </div>
             )}

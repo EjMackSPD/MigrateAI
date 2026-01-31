@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useToast } from '@/contexts/ToastContext'
 import MainLayout from '@/components/layout/MainLayout'
+import { formatContentType, getContentTypeIcon } from '@/lib/utils/content-types'
 import styles from './DraftEditor.module.css'
 
 interface SourcePage {
@@ -25,6 +26,7 @@ interface Draft {
   id: string
   title: string
   content: string
+  contentType: string
   status: string
   sourcePages: SourcePage[]
   versions: DraftVersion[]
@@ -179,6 +181,14 @@ export default function DraftEditorPage() {
           <span className={`${styles.status} ${styles[draft.status]}`}>
             {draft.status}
           </span>
+          {draft.contentType && (
+            <>
+              <span className={styles.statusLabel}>Type:</span>
+              <span className={styles.contentType}>
+                {getContentTypeIcon(draft.contentType)} {formatContentType(draft.contentType)}
+              </span>
+            </>
+          )}
         </div>
 
         <div className={styles.editorLayout}>

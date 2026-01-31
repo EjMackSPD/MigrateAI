@@ -1,5 +1,21 @@
 # Redis Setup Guide
 
+## ⚠️ Eviction Policy Warning
+
+If you see warnings about "Eviction policy is volatile-lru. It should be 'noeviction'", this is a BullMQ recommendation. 
+
+**For Redis Cloud (Free Tier):**
+- The warning is safe to ignore for development
+- Jobs will still work, but there's a small risk of data loss if Redis runs out of memory
+- Redis Cloud free tier uses `volatile-lru` by default and cannot be changed
+
+**For Production:**
+- Configure Redis with `maxmemory-policy noeviction` 
+- This prevents Redis from evicting job data
+- See your Redis provider's documentation for how to change this setting
+
+## Quick Setup
+
 ## Getting Your Redis Connection URL
 
 ### If using Redis Cloud:

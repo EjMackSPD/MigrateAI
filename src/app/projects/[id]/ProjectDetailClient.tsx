@@ -1,10 +1,16 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import EditProjectForm from '@/components/projects/EditProjectForm'
+import WorkflowProgress from '@/components/projects/WorkflowProgress'
+import IngestionCrawlModal from '@/components/projects/IngestionCrawlModal'
+import ClearProjectModal from '@/components/projects/ClearProjectModal'
+import ProjectPagesList from './ProjectPagesList'
 import styles from './ProjectDetail.module.css'
+import type { WorkflowStage } from '@/lib/utils/workflow'
 
 interface Project {
   id: string
@@ -13,6 +19,7 @@ interface Project {
   baseUrl: string
   description: string | null
   status: string
+  workflowStage: WorkflowStage
   owner: {
     id: string
     name: string | null
@@ -42,9 +49,17 @@ export default function ProjectDetailClient({
   project,
   stats,
 }: ProjectDetailClientProps) {
+  const router = useRouter()
   const { data: session } = useSession()
   const [showEditForm, setShowEditForm] = useState(false)
+  const [showCrawlModal, setShowCrawlModal] = useState(false)
+  const [showClearModal, setShowClearModal] = useState(false)
   const [currentProject, setCurrentProject] = useState(project)
+
+  // Sync from server when props change (e.g. after router.refresh() following clear data)
+  useEffect(() => {
+    setCurrentProject(project)
+  }, [project])
 
   const isOwner = session?.user?.id === project.owner.id
 
@@ -61,12 +76,20 @@ export default function ProjectDetailClient({
               {currentProject.status}
             </span>
             {isOwner && (
-              <button
-                onClick={() => setShowEditForm(true)}
-                className={styles.editButton}
-              >
-                Edit
-              </button>
+              <>
+                <button
+                  onClick={() => setShowEditForm(true)}
+                  className={styles.editButton}
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => setShowClearModal(true)}
+                  className={styles.clearButton}
+                >
+                  Clear data
+                </button>
+              </>
             )}
           </div>
         </div>
@@ -74,6 +97,13 @@ export default function ProjectDetailClient({
         {currentProject.description && (
           <p className={styles.description}>{currentProject.description}</p>
         )}
+
+        <WorkflowProgress
+          currentStage={currentProject.workflowStage}
+          onStageClick={(stage) => {
+            if (stage === 'ingest') setShowCrawlModal(true)
+          }}
+        />
 
         <div className={styles.info}>
           <div>
@@ -116,22 +146,21 @@ export default function ProjectDetailClient({
         </div>
 
         <div className={styles.actions}>
-          <Link href={`/projects/${currentProject.id}/crawl`} className={styles.actionButton}>
-            Start Crawl
-          </Link>
           <Link
             href={`/projects/${currentProject.id}/pillars`}
             className={styles.actionButton}
           >
             View Pillars
           </Link>
-          <Link
-            href={`/projects/${currentProject.id}/pages`}
-            className={styles.actionButton}
-          >
-            View Pages
-          </Link>
+          <a href="#pages" className={styles.actionButton}>
+            Jump to Pages
+          </a>
         </div>
+
+        <ProjectPagesList
+          projectId={currentProject.id}
+          projectName={currentProject.name}
+        />
       </div>
 
       {showEditForm && (
@@ -139,13 +168,35 @@ export default function ProjectDetailClient({
           project={currentProject}
           onClose={() => setShowEditForm(false)}
           onSuccess={async () => {
-            // Refresh project data
             const response = await fetch(`/api/projects/${currentProject.id}`)
             if (response.ok) {
               const updated = await response.json()
               setCurrentProject(updated)
             }
           }}
+        />
+      )}
+
+      {showCrawlModal && (
+        <IngestionCrawlModal
+          projectId={currentProject.id}
+          baseUrl={currentProject.baseUrl}
+          projectName={currentProject.name}
+          onClose={() => setShowCrawlModal(false)}
+        />
+      )}
+
+      {showClearModal && (
+        <ClearProjectModal
+          projectId={currentProject.id}
+          projectName={currentProject.name}
+          stats={{
+            pagesCrawled: stats.pagesCrawled,
+            pillarsCount: stats.pillarsCount,
+            draftsCount: stats.draftsCount,
+          }}
+          onClose={() => setShowClearModal(false)}
+          onSuccess={() => router.refresh()}
         />
       )}
     </>

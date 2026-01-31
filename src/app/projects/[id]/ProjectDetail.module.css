@@ -5,7 +5,7 @@
 .header {
   display: flex;
   justify-content: space-between;
-  align-items: start;
+  align-items: flex-start;
   margin-bottom: 1.5rem;
 }
 
@@ -29,6 +29,23 @@
 
 .editButton:hover {
   background: #5568d3;
+}
+
+.clearButton {
+  padding: 0.5rem 1rem;
+  background: white;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.clearButton:hover {
+  background: #fef2f2;
+  border-color: #f87171;
 }
 
 .title {

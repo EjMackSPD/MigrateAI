@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { analysisQueue } from '@/lib/queue'
 import { z } from 'zod'
+import { canTransitionTo } from '@/lib/utils/workflow'
 
 const analyzeConfigSchema = z.object({
   pageIds: z.array(z.string().uuid()).optional(),
@@ -67,6 +68,14 @@ export async function POST(
       )
     }
 
+    // Update workflow stage to 'analyze' if transitioning
+    if (canTransitionTo(project.workflowStage as any, 'analyze')) {
+      await prisma.project.update({
+        where: { id: params.id },
+        data: { workflowStage: 'analyze' },
+      })
+    }
+
     // Create job record
     const job = await prisma.job.create({
       data: {
@@ -78,7 +87,7 @@ export async function POST(
     })
 
     // Queue analysis job
-    await analysisQueue.add('analyze', {
+    await analysisQueue().add('analyze', {
       projectId: params.id,
       pageIds: validated.pageIds,
     }, {

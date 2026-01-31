@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
+import { Prisma } from '@prisma/client'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 
@@ -39,10 +40,11 @@ export async function GET(
 
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status')
-    const limit = parseInt(searchParams.get('limit') || '50')
-    const offset = parseInt(searchParams.get('offset') || '0')
+    const q = searchParams.get('q')?.trim() || ''
+    const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '10', 10), 1), 100)
+    const offset = Math.max(parseInt(searchParams.get('offset') || '0', 10), 0)
 
-    const where: any = {
+    const where: Record<string, unknown> = {
       projectId: params.id,
     }
 
@@ -50,8 +52,15 @@ export async function GET(
       where.status = status
     }
 
+    if (q) {
+      where.OR = [
+        { title: { contains: q, mode: 'insensitive' } },
+        { url: { contains: q, mode: 'insensitive' } },
+      ]
+    }
+
     const pages = await prisma.page.findMany({
-      where,
+      where: where as Prisma.PageWhereInput,
       select: {
         id: true,
         url: true,
@@ -70,7 +79,7 @@ export async function GET(
       skip: offset,
     })
 
-    const total = await prisma.page.count({ where })
+    const total = await prisma.page.count({ where: where as Prisma.PageWhereInput })
 
     return NextResponse.json({
       pages,

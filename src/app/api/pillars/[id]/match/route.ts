@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { matchQueue } from '@/lib/queue'
 import { z } from 'zod'
+import { canTransitionTo } from '@/lib/utils/workflow'
 
 const matchConfigSchema = z.object({
   minRelevance: z.number().min(0).max(1).optional(),
@@ -50,6 +51,19 @@ export async function POST(
     const body = await request.json()
     const validated = matchConfigSchema.parse(body)
 
+    // Get project to check workflow stage
+    const project = await prisma.project.findUnique({
+      where: { id: pillar.projectId },
+    })
+
+    // Update workflow stage to 'match' if transitioning
+    if (project && canTransitionTo(project.workflowStage as any, 'match')) {
+      await prisma.project.update({
+        where: { id: pillar.projectId },
+        data: { workflowStage: 'match' },
+      })
+    }
+
     // Create job record
     const job = await prisma.job.create({
       data: {
@@ -61,7 +75,7 @@ export async function POST(
     })
 
     // Queue match job
-    await matchQueue.add('match', {
+    await matchQueue().add('match', {
       pillarId: params.id,
       config: validated,
     }, {

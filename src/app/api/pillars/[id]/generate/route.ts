@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { generationQueue } from '@/lib/queue'
 import { z } from 'zod'
+import { canTransitionTo } from '@/lib/utils/workflow'
 
 const generateConfigSchema = z.object({
   contentType: z.enum([
@@ -68,6 +69,19 @@ export async function POST(
       )
     }
 
+    // Get project to check workflow stage
+    const project = await prisma.project.findUnique({
+      where: { id: pillar.projectId },
+    })
+
+    // Update workflow stage to 'generate' if transitioning
+    if (project && canTransitionTo(project.workflowStage as any, 'generate')) {
+      await prisma.project.update({
+        where: { id: pillar.projectId },
+        data: { workflowStage: 'generate' },
+      })
+    }
+
     // Create job record
     const job = await prisma.job.create({
       data: {
@@ -79,7 +93,7 @@ export async function POST(
     })
 
     // Queue generation job
-    await generationQueue.add(
+    await generationQueue().add(
       'generate',
       {
         pillarId: params.id,

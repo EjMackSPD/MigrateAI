@@ -152,6 +152,21 @@ export class GenerationService {
           '@type': 'FAQPage',
           mainEntity: [],
         }
+      case 'glossary':
+        return {
+          ...base,
+          '@type': 'DefinedTermSet',
+          name: title,
+          description: 'A comprehensive glossary of key terms and definitions',
+          hasDefinedTerm: [], // Will be populated with individual DefinedTerm items
+        }
+      case 'comparison':
+        return {
+          ...base,
+          '@type': 'Article',
+          headline: title,
+          articleSection: 'Comparison',
+        }
       default:
         return base
     }

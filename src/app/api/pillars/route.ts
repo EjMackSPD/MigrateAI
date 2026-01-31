@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
+import { canTransitionTo } from '@/lib/utils/workflow'
 
 const pillarSchema = z.object({
   projectId: z.string().uuid(),
@@ -97,10 +98,23 @@ export async function POST(request: Request) {
     }
 
     // Generate slug from name
-    const slug = validated.name
+    let baseSlug = validated.name
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '')
+    
+    // Ensure slug is unique within the project
+    let slug = baseSlug
+    let counter = 1
+    while (await prisma.pillar.findFirst({
+      where: {
+        projectId: validated.projectId,
+        slug: slug,
+      },
+    })) {
+      slug = `${baseSlug}-${counter}`
+      counter++
+    }
 
     const pillar = await prisma.pillar.create({
       data: {
@@ -116,6 +130,14 @@ export async function POST(request: Request) {
       },
     })
 
+    // Update workflow stage to 'configure' if transitioning
+    if (canTransitionTo(project.workflowStage as any, 'configure')) {
+      await prisma.project.update({
+        where: { id: validated.projectId },
+        data: { workflowStage: 'configure' },
+      })
+    }
+
     return NextResponse.json(pillar, { status: 201 })
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -126,6 +148,26 @@ export async function POST(request: Request) {
     }
 
     console.error('Error creating pillar:', error)
+    
+    // Provide more specific error messages
+    if (error instanceof Error) {
+      // Check for unique constraint violation
+      if (error.message.includes('Unique constraint') || error.message.includes('duplicate key')) {
+        return NextResponse.json(
+          { error: 'A pillar with this name already exists in this project' },
+          { status: 409 }
+        )
+      }
+      
+      return NextResponse.json(
+        { 
+          error: 'Internal server error',
+          details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        },
+        { status: 500 }
+      )
+    }
+    
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

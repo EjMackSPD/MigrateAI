@@ -5,7 +5,53 @@ export const CONTENT_TYPE_PROMPTS = {
 
   faq_page: `Generate a comprehensive FAQ page. Extract questions from the source content or infer questions users would have. Organize into logical categories. Each answer should be 40-60 words - complete but concise. Aim for 15-25 questions.`,
 
-  glossary: `Generate a glossary of key terms from the source content. Each definition should be 20-40 words. Include related terms where connections exist. Organize alphabetically. Include a quick reference table at the end.`,
+  glossary: `Generate a comprehensive glossary of key terms from the source content following this exact structure:
+
+# [Topic] Glossary: Key Terms and Definitions
+
+[1-2 sentence intro explaining what terms are covered and who this glossary serves.]
+
+**Last Updated**: [Date]
+
+---
+
+## A
+
+### [Term]
+**Definition**: [Clear, concise definition in 20-40 words. Be precise and conversational.]
+
+**Related terms**: [Link to related term], [Link to related term]
+
+[Optional: **Example**: One sentence showing the term in context.]
+
+---
+
+[Continue alphabetically with all relevant terms from source content. Group terms under their first letter (A, B, C, etc.). Include at least 10-15 terms if available in source content.]
+
+---
+
+## Quick Reference
+
+| Term | Brief Definition |
+|------|------------------|
+| [Term 1] | [10-15 word definition] |
+| [Term 2] | [10-15 word definition] |
+| [Term 3] | [10-15 word definition] |
+
+[Include all terms in alphabetical order in the quick reference table.]
+
+---
+
+**Looking for more detail?** Explore our [Pillar Page link] or [Related Article link].
+
+Requirements:
+- Extract ALL key terms, acronyms, and concepts from source content
+- Each definition must be 20-40 words - clear, complete, and conversational
+- Include related terms cross-references where logical connections exist
+- Organize alphabetically by first letter
+- Include examples when they clarify meaning
+- Create a comprehensive quick reference table at the end
+- Ensure definitions are accurate to source content but written for clarity`,
 
   comparison: `Generate a balanced comparison between the options or approaches discussed in the source content. Be fair to both sides. Include a quick comparison table. Cover 3-4 key comparison factors in detail. Provide clear "choose this if" guidance without being prescriptive.`,
 }

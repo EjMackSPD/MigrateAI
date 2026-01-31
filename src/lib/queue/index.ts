@@ -2,10 +2,10 @@ import { Queue, Worker, Job } from 'bullmq'
 import IORedis from 'ioredis'
 
 let connection: IORedis | null = null
-let crawlQueue: Queue | null = null
-let analysisQueue: Queue | null = null
-let matchQueue: Queue | null = null
-let generationQueue: Queue | null = null
+let _crawlQueue: Queue | null = null
+let _analysisQueue: Queue | null = null
+let _matchQueue: Queue | null = null
+let _generationQueue: Queue | null = null
 
 function getConnection(): IORedis {
   if (!connection) {
@@ -26,6 +26,9 @@ function getConnection(): IORedis {
           return Math.min(times * 200, 2000)
         },
         lazyConnect: true,
+        // Suppress eviction policy warning for now (Redis Cloud uses volatile-lru by default)
+        // In production, configure Redis with "noeviction" policy
+        enableOfflineQueue: false,
       })
 
       // Set up error handlers
@@ -35,6 +38,14 @@ function getConnection(): IORedis {
 
       connection.on('connect', () => {
         console.log('Redis connected successfully')
+      })
+
+      connection.on('ready', () => {
+        console.log('Redis connection ready')
+      })
+
+      connection.on('close', () => {
+        console.log('Redis connection closed')
       })
     } catch (error) {
       throw new Error(
@@ -46,38 +57,39 @@ function getConnection(): IORedis {
 }
 
 function getCrawlQueue(): Queue {
-  if (!crawlQueue) {
-    crawlQueue = new Queue('crawl', { connection: getConnection() })
+  if (!_crawlQueue) {
+    _crawlQueue = new Queue('crawl', { connection: getConnection() })
   }
-  return crawlQueue
+  return _crawlQueue
 }
 
 function getAnalysisQueue(): Queue {
-  if (!analysisQueue) {
-    analysisQueue = new Queue('analysis', { connection: getConnection() })
+  if (!_analysisQueue) {
+    _analysisQueue = new Queue('analysis', { connection: getConnection() })
   }
-  return analysisQueue
+  return _analysisQueue
 }
 
 function getMatchQueue(): Queue {
-  if (!matchQueue) {
-    matchQueue = new Queue('match', { connection: getConnection() })
+  if (!_matchQueue) {
+    _matchQueue = new Queue('match', { connection: getConnection() })
   }
-  return matchQueue
+  return _matchQueue
 }
 
 function getGenerationQueue(): Queue {
-  if (!generationQueue) {
-    generationQueue = new Queue('generation', { connection: getConnection() })
+  if (!_generationQueue) {
+    _generationQueue = new Queue('generation', { connection: getConnection() })
   }
-  return generationQueue
+  return _generationQueue
 }
 
-// Export queues - they will be initialized lazily when first accessed
-export const crawlQueue = getCrawlQueue()
-export const analysisQueue = getAnalysisQueue()
-export const matchQueue = getMatchQueue()
-export const generationQueue = getGenerationQueue()
+// Queues are created lazily when getCrawlQueue() etc. are first called.
+// API routes should call these inside try/catch so missing REDIS_URL doesn't crash the server on import.
+export const crawlQueue = getCrawlQueue
+export const analysisQueue = getAnalysisQueue
+export const matchQueue = getMatchQueue
+export const generationQueue = getGenerationQueue
 
 // Export connection for workers
 export function getQueueConnection(): IORedis {
@@ -89,5 +101,34 @@ export function createWorker(
   queueName: string,
   processor: (job: Job) => Promise<any>
 ) {
-  return new Worker(queueName, processor, { connection: getConnection() })
+  const connection = getConnection()
+  const worker = new Worker(queueName, processor, { 
+    connection,
+    concurrency: 1, // Process one job at a time
+  })
+
+  // Add event listeners for debugging
+  worker.on('completed', (job) => {
+    console.log(`Worker [${queueName}]: Job ${job.id} completed`)
+  })
+
+  worker.on('failed', (job, err) => {
+    console.error(`❌ Worker [${queueName}]: Job ${job?.id} failed:`, err)
+  })
+
+  worker.on('error', (err) => {
+    console.error(`Worker [${queueName}]: Error:`, err)
+  })
+
+  worker.on('active', (job) => {
+    console.log(`🔄 Worker [${queueName}]: Job ${job.id} is now active`)
+  })
+
+  worker.on('stalled', (jobId) => {
+    console.warn(`Worker [${queueName}]: Job ${jobId} stalled`)
+  })
+
+  console.log(`Worker [${queueName}] initialized and listening for jobs`)
+
+  return worker
 }

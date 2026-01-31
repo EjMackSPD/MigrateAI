@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { ExportService } from '@/lib/services/exporter'
 import { z } from 'zod'
+import { canTransitionTo } from '@/lib/utils/workflow'
 
 const exportConfigSchema = z.object({
   format: z.enum(['markdown']).default('markdown'),
@@ -65,6 +66,14 @@ export async function POST(
         status: 'exported',
       },
     })
+
+    // Update workflow stage to 'export' if transitioning
+    if (canTransitionTo(project.workflowStage as any, 'export')) {
+      await prisma.project.update({
+        where: { id: params.id },
+        data: { workflowStage: 'export' },
+      })
+    }
 
     return new NextResponse(zipBuffer, {
       headers: {

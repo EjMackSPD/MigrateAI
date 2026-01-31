@@ -124,8 +124,23 @@
   font-size: 0.875rem;
 }
 
-.table tbody tr:hover {
+.tableRow {
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.tableRow:hover {
   background: #f7fafc;
+}
+
+.pageLink {
+  color: #1a202c;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.pageLink:hover {
+  color: #667eea;
 }
 
 .table tbody tr:last-child td {
@@ -153,6 +168,11 @@
   font-size: 0.75rem;
   font-weight: 500;
   text-transform: capitalize;
+}
+
+.status.crawled {
+  background: #e0e7ff;
+  color: #3730a3;
 }
 
 .status.pending {
@@ -189,6 +209,54 @@
   display: inline-block;
   color: #718096;
   font-size: 0.75rem;
+}
+
+.actionsCell {
+  white-space: nowrap;
+}
+
+.actionsCell button + button {
+  margin-left: 0.5rem;
+}
+
+.rowButton {
+  padding: 0.25rem 0.5rem;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.rowButton:hover:not(:disabled) {
+  background: #5568d3;
+}
+
+.rowButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.rowButtonDelete {
+  padding: 0.25rem 0.5rem;
+  background: white;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.rowButtonDelete:hover:not(:disabled) {
+  background: #fef2f2;
+}
+
+.rowButtonDelete:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 @media (max-width: 768px) {

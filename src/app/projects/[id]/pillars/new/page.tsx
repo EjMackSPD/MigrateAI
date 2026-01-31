@@ -34,17 +34,17 @@ export default function NewPillarPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           projectId,
-          name: formData.name,
-          description: formData.description,
-          targetAudience: formData.targetAudience || undefined,
-          toneNotes: formData.toneNotes || undefined,
-          primaryKeywords: formData.primaryKeywords
-            ? formData.primaryKeywords.split(',').map((k) => k.trim())
-            : undefined,
-          keyThemes: formData.keyThemes
-            ? formData.keyThemes.split(',').map((t) => t.trim())
-            : undefined,
-          priority: formData.priority,
+          name: formData.name.trim(),
+          description: formData.description.trim(),
+          targetAudience: formData.targetAudience.trim() || undefined,
+          toneNotes: formData.toneNotes.trim() || undefined,
+          primaryKeywords: formData.primaryKeywords.trim()
+            ? formData.primaryKeywords.split(',').map((k) => k.trim()).filter((k) => k.length > 0)
+            : [],
+          keyThemes: formData.keyThemes.trim()
+            ? formData.keyThemes.split(',').map((t) => t.trim()).filter((t) => t.length > 0)
+            : [],
+          priority: Number(formData.priority) || 0,
         }),
       })
 
@@ -71,9 +71,12 @@ export default function NewPillarPage() {
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >
   ) => {
+    const value = e.target.name === 'priority' 
+      ? Number(e.target.value) || 0
+      : e.target.value
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [e.target.name]: value,
     })
   }
 
