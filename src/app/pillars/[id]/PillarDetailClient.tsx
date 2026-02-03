@@ -103,7 +103,7 @@ export default function PillarDetailClient({
         <div className={styles.titleSection}>
           <h1 className={styles.title}>{pillar.name}</h1>
           <Link
-            href={`/projects/${pillar.projectId}`}
+            href={`/projects/${pillar.project.id}`}
             className={styles.projectLink}
           >
             Project: {pillar.project.name}

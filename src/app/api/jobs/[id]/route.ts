@@ -23,7 +23,7 @@ async function checkJobAccess(jobId: string, userId: string) {
     },
   })
 
-  if (!job) {
+  if (!job || !job.project) {
     return null
   }
 

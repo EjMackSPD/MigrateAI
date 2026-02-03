@@ -234,7 +234,7 @@ export default function DraftEditorPage() {
                     __html: content
                       .replace(/\n/g, '<br>')
                       .replace(/#{1,6}\s+(.+)/g, (match, text) => {
-                        const level = match.match(/^#+/)[0].length
+                        const level = match.match(/^#+/)?.[0]?.length ?? 1
                         return `<h${level}>${text}</h${level}>`
                       }),
                   }}

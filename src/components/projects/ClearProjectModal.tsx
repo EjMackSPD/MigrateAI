@@ -7,7 +7,7 @@ import styles from './ClearProjectModal.module.css'
 type ClearScope = 'pages' | 'pillars' | 'jobs' | 'all'
 
 interface ClearProjectModalProps {
-  projectId: string
+  projectSlug: string
   projectName: string
   stats: { pagesCrawled: number; pillarsCount: number; draftsCount: number }
   onClose: () => void
@@ -22,7 +22,7 @@ const SCOPE_OPTIONS: { value: ClearScope; label: string; description: string }[]
 ]
 
 export default function ClearProjectModal({
-  projectId,
+  projectSlug,
   projectName,
   stats,
   onClose,
@@ -42,7 +42,7 @@ export default function ClearProjectModal({
     if (!canSubmit) return
     setLoading(true)
     try {
-      const res = await fetch(`/api/projects/${projectId}/clear`, {
+      const res = await fetch(`/api/projects/${projectSlug}/clear`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ scope }),

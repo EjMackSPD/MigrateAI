@@ -288,7 +288,8 @@ CREATE TABLE pages (
     title VARCHAR(500),
     meta_description TEXT,
     raw_html TEXT,
-    extracted_content TEXT,  -- Clean text content
+    extracted_content TEXT,  -- Clean flat text (for embeddings)
+    structured_content TEXT,  -- Semantic Markdown preserving headings, lists, FAQ, tables
     word_count INTEGER,
     content_type VARCHAR(50),  -- blog, product, faq, landing, about, etc.
     detected_topics TEXT[],  -- Array of topic strings
@@ -867,13 +868,42 @@ class ContentExtractor:
 ```
 
 **Content Extraction Strategy:**
-1. Parse HTML with BeautifulSoup
+1. Parse HTML with Cheerio (or similar DOM parser)
 2. Remove known boilerplate elements (nav, footer, aside, script, style)
 3. Identify main content area using heuristics:
    - Look for `<main>`, `<article>`, `role="main"`
-   - Fall back to largest text-containing block
-4. Extract and clean text
-5. Preserve some structure (headings, lists) for analysis
+   - Fall back to body (with nav/footer/aside removed)
+4. Extract and produce dual output:
+   - **extracted_content**: Flattened plain text for embeddings and analysis
+   - **structured_content**: Semantic Markdown preserving structure for migration
+5. Preserve structure in structured_content:
+   - Headings (H1–H6) as `#`–`######` Markdown
+   - Paragraphs as plain blocks
+   - Lists (ul/ol) as `-` or `1.` Markdown
+   - Tables as Markdown tables
+   - FAQ-style `dl/dt/dd` as `### Question` / answer blocks
+   - Blockquotes as `>` Markdown
+
+**Structured Content Format Example:**
+```markdown
+# Page Title
+
+## Introduction
+Opening paragraph text...
+
+## Key Features
+- Feature one
+- Feature two
+
+## FAQ
+### What is X?
+Answer to X.
+
+### How does Y work?
+Answer to Y.
+```
+
+The generator prefers `structured_content` when available for migration, falling back to `extracted_content`. This enables the AI to leverage section boundaries (e.g. FAQ, product specs) when transforming content.
 
 ### 7.2 Analysis Service
 

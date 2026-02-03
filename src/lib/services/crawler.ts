@@ -1,5 +1,6 @@
 import { chromium, Browser, Page } from 'playwright'
 import { createHash } from 'crypto'
+import * as cheerio from 'cheerio'
 import { ContentExtractor } from './extractor'
 
 export interface CrawlConfig {
@@ -12,6 +13,11 @@ export interface CrawlConfig {
   rateLimitMs?: number
 }
 
+export interface CrawledLink {
+  url: string
+  anchorText?: string
+}
+
 export interface CrawledPage {
   url: string
   urlHash: string
@@ -19,9 +25,10 @@ export interface CrawledPage {
   metaDescription: string | null
   rawHtml: string
   extractedContent: string
+  structuredContent: string
   wordCount: number
   contentType: string | null
-  links: string[]
+  links: CrawledLink[]
   crawlDepth: number
 }
 
@@ -85,20 +92,42 @@ export class CrawlerService {
       const html = await page.content()
       const extracted = this.extractor.extract(html, url)
 
-      // Extract links (with error handling in case page is partially loaded)
-      let links: string[] = []
+      // Extract links with anchor text
+      let links: CrawledLink[] = []
       try {
         links = await page.evaluate(() => {
           const anchors = Array.from(document.querySelectorAll('a[href]'))
           return anchors
-            .map((a) => (a as HTMLAnchorElement).href)
-            .filter((href) => href && !href.startsWith('javascript:'))
+            .map((a) => {
+              const el = a as HTMLAnchorElement
+              const href = el.href
+              if (!href || href.startsWith('javascript:')) return null
+              const anchorText = el.textContent?.trim().slice(0, 500) || undefined
+              return { url: href, anchorText: anchorText || undefined }
+            })
+            .filter((x): x is { url: string; anchorText?: string } => x !== null)
         })
       } catch (evalError) {
-        // If evaluation fails (page might be partially loaded), just use empty links
         console.warn(`Could not extract links from ${url}, continuing with empty links`)
         links = []
       }
+
+      const filteredUrls = this.filterLinks(
+        links.map((l) => l.url),
+        normalizedUrl,
+        config
+      )
+      const urlSet = new Set(filteredUrls)
+      const seen = new Set<string>()
+      links = links
+        .filter((l) => {
+          const norm = this.normalizeUrl(l.url)
+          if (!urlSet.has(norm)) return false
+          if (seen.has(norm)) return false
+          seen.add(norm)
+          return true
+        })
+        .map((l) => ({ url: this.normalizeUrl(l.url), anchorText: l.anchorText }))
 
       // Normalize URL (strip query string and hash) for consistent hashing
       const normalizedUrl = this.normalizeUrl(url)
@@ -111,9 +140,10 @@ export class CrawlerService {
         metaDescription: extracted.metaDescription,
         rawHtml: html,
         extractedContent: extracted.content,
+        structuredContent: extracted.structuredContent,
         wordCount: extracted.wordCount,
         contentType: extracted.contentType,
-        links: this.filterLinks(links, normalizedUrl, config),
+        links,
         crawlDepth: 0, // Will be set by crawl manager
       }
     } catch (error) {
@@ -171,6 +201,30 @@ export class CrawlerService {
       // Relative URLs starting with # are hash-only
       return url.trim().startsWith('#')
     }
+  }
+
+  /**
+   * Extract links from stored HTML (e.g. for pages we've already crawled).
+   * Used to continue BFS when skipping re-crawl of existing pages.
+   */
+  extractLinksFromHtml(
+    html: string,
+    pageUrl: string,
+    config: CrawlConfig
+  ): string[] {
+    const $ = cheerio.load(html)
+    const links: string[] = []
+    $('a[href]').each((_, el) => {
+      const href = $(el).attr('href')
+      if (href && !href.trim().startsWith('javascript:')) {
+        try {
+          links.push(new URL(href, pageUrl).href)
+        } catch {
+          // Invalid URL, skip
+        }
+      }
+    })
+    return this.filterLinks(links, pageUrl, config)
   }
 
   private filterLinks(

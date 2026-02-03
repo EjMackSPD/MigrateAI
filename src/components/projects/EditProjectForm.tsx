@@ -3,10 +3,12 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useToast } from '@/contexts/ToastContext'
+import { getProjectPath } from '@/lib/utils/slugify'
 import styles from './EditProjectForm.module.css'
 
 interface Project {
   id: string
+  slug: string
   name: string
   clientName: string
   baseUrl: string
@@ -92,7 +94,7 @@ export default function EditProjectForm({
     const urlToUse = urlValidation.normalizedUrl || formData.baseUrl
 
     try {
-      const response = await fetch(`/api/projects/${project.id}`, {
+      const response = await fetch(`/api/projects/${getProjectPath(project)}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

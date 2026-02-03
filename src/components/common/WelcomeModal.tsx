@@ -35,7 +35,7 @@ export default function WelcomeModal({ userName, onClose }: WelcomeModalProps) {
           </div>
           <h2 className={styles.title}>Welcome{userName ? `, ${userName}` : ''}!</h2>
           <p className={styles.message}>
-            Your account has been created successfully. You're all set to start migrating and transforming content.
+            Your account has been created successfully. You&apos;re all set to start migrating and transforming content.
           </p>
           <div className={styles.features}>
             <div className={styles.featureItem}>

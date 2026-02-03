@@ -12,6 +12,7 @@ interface MatchJobData {
 }
 
 export const matchWorker = createWorker('match', async (job: Job<MatchJobData>) => {
+  await prisma.$connect()
   const { pillarId, config } = job.data
   const matcher = new MatchingService()
 

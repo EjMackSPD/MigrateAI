@@ -9,6 +9,7 @@ interface AnalysisJobData {
 }
 
 export const analysisWorker = createWorker('analysis', async (job: Job<AnalysisJobData>) => {
+  await prisma.$connect()
   const { projectId, pageIds } = job.data
   const analyzer = new AnalysisService()
 

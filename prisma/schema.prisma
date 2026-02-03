@@ -72,6 +72,7 @@ model VerificationToken {
 
 model Project {
   id            String   @id @default(uuid())
+  slug          String   @unique
   name          String
   clientName    String   @map("client_name")
   baseUrl       String   @map("base_url")
@@ -84,11 +85,13 @@ model Project {
   updatedAt     DateTime @updatedAt @map("updated_at")
 
   // Relations
-  owner   User            @relation("ProjectOwner", fields: [ownerId], references: [id])
-  members ProjectMember[]
-  pages   Page[]
-  pillars Pillar[]
-  jobs    Job[]
+  owner     User            @relation("ProjectOwner", fields: [ownerId], references: [id])
+  members   ProjectMember[]
+  pages     Page[]
+  pillars   Pillar[]
+  jobs      Job[]
+  pageLinks    PageLink[]
+  pageRedirects PageRedirect[]
 
   @@index([status])
   @@index([clientName])
@@ -114,25 +117,31 @@ model ProjectMember {
 model Page {
   id               String                       @id @default(uuid())
   projectId        String                       @map("project_id")
+  slug             String?                      @db.VarChar(200)
   url              String                       @db.VarChar(2000)
   urlHash          String                       @map("url_hash") @db.VarChar(64)
   title            String?                      @db.VarChar(500)
   metaDescription  String?                      @map("meta_description") @db.Text
   rawHtml          String?                      @map("raw_html") @db.Text
   extractedContent String?                      @map("extracted_content") @db.Text
+  structuredContent String?                     @map("structured_content") @db.Text
   wordCount        Int?
   contentType      String?                      @map("content_type") @db.VarChar(50)
   detectedTopics   String[]                     @map("detected_topics")
   qualityScore     Decimal?                     @map("quality_score") @db.Decimal(3, 2)
   embedding        Unsupported("vector(1536)")? // pgvector type
   crawlDepth       Int?                         @map("crawl_depth")
-  status           String                       @default("crawled") // crawled, analyzed, matched, used
+  status           String                       @default("crawled") // crawled, analyzed, matched, used, archived
   crawledAt        DateTime                     @default(now()) @map("crawled_at")
   analyzedAt       DateTime?                    @map("analyzed_at")
 
   // Relations
-  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  matches Match[]
+  project   Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  matches   Match[]
+  outLinks           PageLink[]      @relation("LinkSource")
+  inLinks            PageLink[]      @relation("LinkTarget")
+  redirect           PageRedirect?   @relation("RedirectSource")
+  redirectsTargeting PageRedirect[]  @relation("RedirectTarget")
 
   @@unique([projectId, urlHash])
   @@index([projectId])
@@ -186,6 +195,49 @@ model Match {
   @@index([pageId])
   @@index([pillarId, isSelected])
   @@map("matches")
+}
+
+model PageLink {
+  id            String   @id @default(uuid())
+  projectId     String   @map("project_id")
+  sourcePageId  String   @map("source_page_id")
+  targetUrl     String   @map("target_url") @db.VarChar(2000)
+  targetUrlHash String   @map("target_url_hash") @db.VarChar(64)
+  anchorText    String?  @map("anchor_text") @db.Text
+  isInternal    Boolean  @map("is_internal") @default(true)
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  // Relations
+  project      Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  sourcePage   Page    @relation("LinkSource", fields: [sourcePageId], references: [id], onDelete: Cascade)
+  targetPage   Page?   @relation("LinkTarget", fields: [targetPageId], references: [id], onDelete: SetNull)
+  targetPageId String? @map("target_page_id")
+
+  @@unique([sourcePageId, targetUrlHash])
+  @@index([projectId])
+  @@index([sourcePageId])
+  @@index([targetPageId])
+  @@index([targetUrlHash])
+  @@map("page_links")
+}
+
+model PageRedirect {
+  id            String   @id @default(uuid())
+  projectId     String   @map("project_id")
+  sourcePageId  String   @unique @map("source_page_id")
+  sourceUrl     String   @map("source_url") @db.VarChar(2000)
+  targetType    String   @map("target_type") @db.VarChar(20) // url, placeholder
+  targetUrl     String?  @map("target_url") @db.VarChar(2000)
+  targetPageId  String?  @map("target_page_id")
+  notes         String?  @db.Text
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  project     Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  sourcePage  Page    @relation("RedirectSource", fields: [sourcePageId], references: [id], onDelete: Cascade)
+  targetPage  Page?   @relation("RedirectTarget", fields: [targetPageId], references: [id], onDelete: SetNull)
+
+  @@index([projectId])
+  @@map("page_redirects")
 }
 
 model Draft {

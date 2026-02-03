@@ -56,6 +56,7 @@ export class GenerationService {
         url: true,
         title: true,
         extractedContent: true,
+        structuredContent: true,
       },
     })
 

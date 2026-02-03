@@ -81,7 +81,7 @@ export default function LoginContent() {
         </form>
         
         <p className={styles.link}>
-          Don't have an account? <a href="/register">Register</a>
+          Don&apos;t have an account? <a href="/register">Register</a>
         </p>
       </div>
     </div>

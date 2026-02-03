@@ -151,7 +151,7 @@ export default function MatchesPage() {
           <div>
             <h1 className={styles.title}>Matches for {pillar.name}</h1>
             <Link
-              href={`/projects/${pillar.projectId}`}
+              href={`/projects/${pillar.project.id}`}
               className={styles.projectLink}
             >
               Project: {pillar.project.name}

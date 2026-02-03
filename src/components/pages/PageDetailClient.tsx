@@ -1,11 +1,12 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import { useToast } from '@/contexts/ToastContext'
 import ContentOptionsComparison from './ContentOptionsComparison'
-import type { ContentType } from '@/lib/utils/content-types'
 
 interface PageDetailClientProps {
   pageId: string
+  projectSlug: string
   page: {
     wordCount: number | null
     contentType: string | null
@@ -16,20 +17,22 @@ interface PageDetailClientProps {
 
 export default function PageDetailClient({
   pageId,
+  projectSlug,
   page,
 }: PageDetailClientProps) {
   const router = useRouter()
+  const toast = useToast()
 
-  const handleSelectContentType = (contentType: ContentType) => {
-    // Navigate to pillar selection or generation page
-    // For now, we'll show an alert - this can be enhanced later
-    router.push(`/pages/${pageId}?generate=${contentType}`)
+  const handleGenerateSuccess = (jobId: string, pillarId: string) => {
+    toast.showSuccess('Generation started. Check Jobs for status.')
+    router.push(`/jobs/${jobId}`)
   }
 
   return (
     <ContentOptionsComparison
+      pageId={pageId}
       page={page}
-      onSelectContentType={handleSelectContentType}
+      onGenerateSuccess={handleGenerateSuccess}
     />
   )
 }

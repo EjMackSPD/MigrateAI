@@ -28,7 +28,8 @@ function getConnection(): IORedis {
         lazyConnect: true,
         // Suppress eviction policy warning for now (Redis Cloud uses volatile-lru by default)
         // In production, configure Redis with "noeviction" policy
-        enableOfflineQueue: false,
+        // enableOfflineQueue: true allows commands while connecting (prevents "Stream isn't writeable" errors)
+        enableOfflineQueue: true,
       })
 
       // Set up error handlers
@@ -58,28 +59,28 @@ function getConnection(): IORedis {
 
 function getCrawlQueue(): Queue {
   if (!_crawlQueue) {
-    _crawlQueue = new Queue('crawl', { connection: getConnection() })
+    _crawlQueue = new Queue('crawl', { connection: getConnection(), skipVersionCheck: true })
   }
   return _crawlQueue
 }
 
 function getAnalysisQueue(): Queue {
   if (!_analysisQueue) {
-    _analysisQueue = new Queue('analysis', { connection: getConnection() })
+    _analysisQueue = new Queue('analysis', { connection: getConnection(), skipVersionCheck: true })
   }
   return _analysisQueue
 }
 
 function getMatchQueue(): Queue {
   if (!_matchQueue) {
-    _matchQueue = new Queue('match', { connection: getConnection() })
+    _matchQueue = new Queue('match', { connection: getConnection(), skipVersionCheck: true })
   }
   return _matchQueue
 }
 
 function getGenerationQueue(): Queue {
   if (!_generationQueue) {
-    _generationQueue = new Queue('generation', { connection: getConnection() })
+    _generationQueue = new Queue('generation', { connection: getConnection(), skipVersionCheck: true })
   }
   return _generationQueue
 }
@@ -105,6 +106,7 @@ export function createWorker(
   const worker = new Worker(queueName, processor, { 
     connection,
     concurrency: 1, // Process one job at a time
+    skipVersionCheck: true, // Suppress eviction policy warning (Redis Cloud free tier uses volatile-lru)
   })
 
   // Add event listeners for debugging

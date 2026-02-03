@@ -69,15 +69,16 @@ export function buildUserPrompt(
     url: string
     title: string | null
     extractedContent: string | null
+    structuredContent?: string | null
   }>,
   contentType: keyof typeof CONTENT_TYPE_PROMPTS,
   additionalGuidance?: string
 ): string {
   const sourceContent = sourcePages
-    .map(
-      (page, i) =>
-        `Source ${i + 1}: ${page.title || page.url}\nURL: ${page.url}\n\n${page.extractedContent || 'No content available'}\n\n---\n\n`
-    )
+    .map((page, i) => {
+      const content = page.structuredContent || page.extractedContent || 'No content available'
+      return `Source ${i + 1}: ${page.title || page.url}\nURL: ${page.url}\n\n${content}\n\n---\n\n`
+    })
     .join('')
 
   return `## Pillar Context
@@ -92,6 +93,8 @@ ${pillar.toneNotes ? `**Tone Notes**: ${pillar.toneNotes}\n` : ''}**Primary Keyw
 ${CONTENT_TYPE_PROMPTS[contentType]}
 
 ${additionalGuidance ? `## Additional Guidance\n\n${additionalGuidance}\n\n` : ''}## Source Content
+
+The source content preserves headings and structure (sections, lists, FAQ Q&A pairs, etc.). Use these sections to inform how you structure the output.
 
 ${sourceContent}
 

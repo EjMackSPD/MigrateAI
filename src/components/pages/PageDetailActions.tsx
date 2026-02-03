@@ -3,21 +3,27 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useToast } from '@/contexts/ToastContext'
+import ArchivePageModal from './ArchivePageModal'
 import styles from './PageDetailActions.module.css'
 
 interface PageDetailActionsProps {
   pageId: string
-  projectId: string
+  projectSlug: string
+  pageUrl: string
+  pageTitle: string | null
 }
 
 export default function PageDetailActions({
   pageId,
-  projectId,
+  projectSlug,
+  pageUrl,
+  pageTitle,
 }: PageDetailActionsProps) {
   const router = useRouter()
   const toast = useToast()
   const [deleting, setDeleting] = useState(false)
   const [rescanning, setRescanning] = useState(false)
+  const [showArchiveModal, setShowArchiveModal] = useState(false)
 
   const handleDelete = async () => {
     if (!confirm('Delete this page? Matches will be removed. This cannot be undone.')) return
@@ -30,7 +36,7 @@ export default function PageDetailActions({
         return
       }
       toast.showSuccess('Page deleted')
-      router.push(`/projects/${projectId}#pages`)
+      router.push(`/projects/${projectSlug}#pages`)
     } catch {
       toast.showError('Failed to delete page')
     } finally {
@@ -56,24 +62,48 @@ export default function PageDetailActions({
     }
   }
 
+  const handleArchiveSuccess = () => {
+    router.push(`/projects/${projectSlug}#pages`)
+    router.refresh()
+  }
+
   return (
-    <div className={styles.actions}>
-      <button
-        type="button"
-        onClick={handleRescan}
-        disabled={rescanning}
-        className={styles.rescanButton}
-      >
-        {rescanning ? 'Rescanning...' : 'Rescan'}
-      </button>
-      <button
-        type="button"
-        onClick={handleDelete}
-        disabled={deleting}
-        className={styles.deleteButton}
-      >
-        {deleting ? 'Deleting...' : 'Delete'}
-      </button>
-    </div>
+    <>
+      <div className={styles.actions}>
+        <button
+          type="button"
+          onClick={() => setShowArchiveModal(true)}
+          className={styles.archiveButton}
+        >
+          Archive
+        </button>
+        <button
+          type="button"
+          onClick={handleRescan}
+          disabled={rescanning}
+          className={styles.rescanButton}
+        >
+          {rescanning ? 'Rescanning...' : 'Rescan'}
+        </button>
+        <button
+          type="button"
+          onClick={handleDelete}
+          disabled={deleting}
+          className={styles.deleteButton}
+        >
+          {deleting ? 'Deleting...' : 'Delete'}
+        </button>
+      </div>
+      {showArchiveModal && (
+        <ArchivePageModal
+          pageId={pageId}
+          pageUrl={pageUrl}
+          pageTitle={pageTitle}
+          projectSlug={projectSlug}
+          onClose={() => setShowArchiveModal(false)}
+          onSuccess={handleArchiveSuccess}
+        />
+      )}
+    </>
   )
 }

@@ -16,6 +16,7 @@ interface GenerationJobData {
 export const generationWorker = createWorker(
   'generation',
   async (job: Job<GenerationJobData>) => {
+    await prisma.$connect()
     const { pillarId, config } = job.data
     const generator = new GenerationService()
 

@@ -1,0 +1,29 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Next.js Dev",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["${workspaceFolder}/node_modules/next/dist/bin/next", "dev"],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Workers",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["-r", "tsconfig-paths/register", "-r", "ts-node/register", "workers.ts"],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Debug Full Stack",
+      "configurations": ["Next.js Dev", "Workers"]
+    }
+  ]
+}

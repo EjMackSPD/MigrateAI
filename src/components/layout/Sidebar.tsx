@@ -3,10 +3,11 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { signOut } from 'next-auth/react'
+import { getProjectPath } from '@/lib/utils/slugify'
 import styles from './Sidebar.module.css'
 
 interface SidebarProps {
-  projects?: Array<{ id: string; name: string }>
+  projects?: Array<{ id: string; slug?: string; name: string }>
 }
 
 export default function Sidebar({ projects = [] }: SidebarProps) {
@@ -50,8 +51,8 @@ export default function Sidebar({ projects = [] }: SidebarProps) {
             {projects.map((project) => (
               <li key={project.id}>
                 <Link
-                  href={`/projects/${project.id}`}
-                  className={`${styles.projectLink} ${isActive(`/projects/${project.id}`) ? styles.active : ''}`}
+                  href={`/projects/${getProjectPath(project)}`}
+                  className={`${styles.projectLink} ${isActive(`/projects/${getProjectPath(project)}`) ? styles.active : ''}`}
                 >
                   {project.name}
                 </Link>

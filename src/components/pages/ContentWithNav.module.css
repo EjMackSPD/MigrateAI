@@ -1,0 +1,210 @@
+.wrapper {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+
+.nav {
+  flex-shrink: 0;
+  width: 200px;
+  position: sticky;
+  top: 1rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  border: 1px solid #e2e8f0;
+}
+
+.navTitle {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+}
+
+.navList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.navItem {
+  margin-bottom: 0.25rem;
+}
+
+.navLink {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: 6px;
+  color: #475569;
+  text-decoration: none;
+  font-size: 0.8125rem;
+  line-height: 1.3;
+  transition: background 0.15s, color 0.15s;
+}
+
+.navLink:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.navH1 {
+  flex-shrink: 0;
+  font-size: 0.5625rem;
+  font-weight: 700;
+  color: #667eea;
+  background: #eef2ff;
+  padding: 0.15rem 0.35rem;
+  border-radius: 4px;
+}
+
+.navH2 {
+  flex-shrink: 0;
+  font-size: 0.5625rem;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.navText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.content {
+  flex: 1;
+  min-width: 0;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.contentText {
+  color: #4a5568;
+  line-height: 1.8;
+  font-size: 0.9375rem;
+  white-space: pre-wrap;
+}
+
+/* Markdown content styles */
+.mdHeadingLabel {
+  display: inline-block;
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: #667eea;
+  background: #eef2ff;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  margin-right: 0.5rem;
+  vertical-align: middle;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.mdH1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a202c;
+  margin: 0 0 0.75rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  scroll-margin-top: 1rem;
+}
+
+.mdH2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #334155;
+  margin: 1.25rem 0 0.5rem 0;
+  scroll-margin-top: 1rem;
+}
+
+.mdH3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #475569;
+  margin: 1rem 0 0.5rem 0;
+}
+
+.mdH4, .mdH5, .mdH6 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #475569;
+  margin: 0.875rem 0 0.5rem 0;
+}
+
+.mdH5 { font-size: 0.9375rem; }
+.mdH6 { font-size: 0.875rem; color: #64748b; }
+
+.mdP {
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  color: #4a5568;
+  margin: 0 0 0.75rem 0;
+}
+
+.mdUl, .mdOl {
+  margin: 0 0 1rem 1.5rem;
+  padding: 0;
+}
+
+.mdLi {
+  margin-bottom: 0.25rem;
+  line-height: 1.5;
+}
+
+.mdBlockquote {
+  margin: 1rem 0;
+  padding: 1rem 1.25rem;
+  background: #f8fafc;
+  border-left: 4px solid #c7d2fe;
+  color: #475569;
+  font-style: italic;
+}
+
+.mdTableWrap {
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+
+.mdTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.mdTable th, .mdTable td {
+  border: 1px solid #e2e8f0;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+
+.mdTable th {
+  background: #f8fafc;
+  font-weight: 600;
+}
+
+.mdImg {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 1rem 0;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+@media (max-width: 768px) {
+  .wrapper {
+    flex-direction: column;
+  }
+
+  .nav {
+    position: static;
+    width: 100%;
+    max-height: 180px;
+    overflow-y: auto;
+  }
+}

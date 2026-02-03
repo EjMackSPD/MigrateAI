@@ -1,6 +1,7 @@
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
+import { getProjectPath } from '@/lib/utils/slugify'
 import { redirect } from 'next/navigation'
 import MainLayout from '@/components/layout/MainLayout'
 import Link from 'next/link'
@@ -67,7 +68,7 @@ export default async function ProjectsPage() {
             {projects.map((project) => (
               <Link
                 key={project.id}
-                href={`/projects/${project.id}`}
+                href={`/projects/${getProjectPath(project)}`}
                 className={styles.card}
               >
                 <div className={styles.cardHeader}>

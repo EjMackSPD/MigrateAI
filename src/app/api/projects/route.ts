@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { validateUrl } from '@/lib/utils/url-validator'
+import { slugify } from '@/lib/utils/slugify'
 import { z } from 'zod'
 
 const projectSchema = z.object({
@@ -86,8 +87,18 @@ export async function POST(request: Request) {
     // Use normalized URL
     const normalizedUrl = urlValidation.normalizedUrl || validated.baseUrl
 
+    // Generate unique slug from project name
+    let baseSlug = slugify(validated.name)
+    let slug = baseSlug
+    let suffix = 0
+    while (await prisma.project.findUnique({ where: { slug } })) {
+      suffix++
+      slug = `${baseSlug}-${suffix}`
+    }
+
     const project = await prisma.project.create({
       data: {
+        slug,
         name: validated.name,
         clientName: validated.clientName,
         baseUrl: normalizedUrl,

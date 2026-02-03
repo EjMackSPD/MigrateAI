@@ -2,11 +2,13 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
+import { getProjectBySlug } from '@/lib/project-access'
 import { z } from 'zod'
 import { canTransitionTo } from '@/lib/utils/workflow'
 
 const pillarSchema = z.object({
-  projectId: z.string().uuid(),
+  projectId: z.string().uuid().optional(),
+  projectSlug: z.string().min(1).optional(),
   name: z.string().min(1, 'Name is required'),
   description: z.string().min(1, 'Description is required'),
   targetAudience: z.string().optional(),
@@ -58,7 +60,7 @@ export async function GET(request: Request) {
     }
 
     const pillars = await prisma.pillar.findMany({
-      where: { projectId },
+      where: { projectId: project.id },
       include: {
         _count: {
           select: {
@@ -92,7 +94,17 @@ export async function POST(request: Request) {
     const body = await request.json()
     const validated = pillarSchema.parse(body)
 
-    const project = await checkProjectAccess(validated.projectId, session.user.id)
+    let project
+    if (validated.projectSlug) {
+      project = await getProjectBySlug(validated.projectSlug, session.user.id)
+    } else if (validated.projectId) {
+      project = await checkProjectAccess(validated.projectId, session.user.id)
+    } else {
+      return NextResponse.json({ error: 'projectId or projectSlug is required' }, { status: 400 })
+    }
+    if (!project) {
+      return NextResponse.json({ error: 'Project not found' }, { status: 404 })
+    }
     if (!project) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 })
     }
@@ -108,7 +120,7 @@ export async function POST(request: Request) {
     let counter = 1
     while (await prisma.pillar.findFirst({
       where: {
-        projectId: validated.projectId,
+        projectId: project.id,
         slug: slug,
       },
     })) {
@@ -118,7 +130,7 @@ export async function POST(request: Request) {
 
     const pillar = await prisma.pillar.create({
       data: {
-        projectId: validated.projectId,
+        projectId: project.id,
         name: validated.name,
         slug,
         description: validated.description,
@@ -133,7 +145,7 @@ export async function POST(request: Request) {
     // Update workflow stage to 'configure' if transitioning
     if (canTransitionTo(project.workflowStage as any, 'configure')) {
       await prisma.project.update({
-        where: { id: validated.projectId },
+        where: { id: project.id },
         data: { workflowStage: 'configure' },
       })
     }

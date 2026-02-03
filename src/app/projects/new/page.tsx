@@ -59,7 +59,7 @@ export default function NewProjectPage() {
       }
 
       toast.showSuccess('Project created successfully!')
-      router.push(`/projects/${data.id}`)
+      router.push(`/projects/${data.slug}`)
     } catch (err) {
       setError('An error occurred. Please try again.')
       toast.showError('An error occurred. Please try again.')

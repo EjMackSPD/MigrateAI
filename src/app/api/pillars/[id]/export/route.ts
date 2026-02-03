@@ -53,7 +53,7 @@ export async function POST(
     const exporter = new ExportService()
     const zipBuffer = await exporter.exportPillar(params.id, validated)
 
-    return new NextResponse(zipBuffer, {
+    return new NextResponse(new Uint8Array(zipBuffer), {
       headers: {
         'Content-Type': 'application/zip',
         'Content-Disposition': `attachment; filename="${pillar.slug}-export-${new Date().toISOString().split('T')[0]}.zip"`,

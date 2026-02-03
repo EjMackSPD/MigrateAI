@@ -6,14 +6,14 @@ import { useToast } from '@/contexts/ToastContext'
 import styles from './IngestionCrawlModal.module.css'
 
 interface IngestionCrawlModalProps {
-  projectId: string
+  projectSlug: string
   baseUrl: string
   projectName: string
   onClose: () => void
 }
 
 export default function IngestionCrawlModal({
-  projectId,
+  projectSlug,
   baseUrl,
   projectName,
   onClose,
@@ -55,7 +55,7 @@ export default function IngestionCrawlModal({
 
       toast.showSuccess('Ingestion started. Redirecting to progress...')
       onClose()
-      router.push(`/projects/${projectId}/crawl?job=${data.jobId}`)
+      router.push(`/projects/${projectSlug}/crawl?job=${data.jobId}`)
     } catch {
       setError('An error occurred. Please try again.')
       toast.showError('An error occurred. Please try again.')
