@@ -6,6 +6,7 @@ import { useToast } from '@/contexts/ToastContext'
 import styles from './IngestionCrawlModal.module.css'
 
 interface IngestionCrawlModalProps {
+  projectId: string
   projectSlug: string
   baseUrl: string
   projectName: string
@@ -13,6 +14,7 @@ interface IngestionCrawlModalProps {
 }
 
 export default function IngestionCrawlModal({
+  projectId,
   projectSlug,
   baseUrl,
   projectName,

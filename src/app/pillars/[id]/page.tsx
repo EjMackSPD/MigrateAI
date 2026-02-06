@@ -102,6 +102,16 @@ export default async function PillarDetailPage({
     take: 10,
   })
 
+  const serializedMatches = matches.map((m) => ({
+    ...m,
+    relevanceScore: m.relevanceScore != null ? Number(m.relevanceScore) : null,
+  }))
+
+  const serializedDrafts = drafts.map((d) => ({
+    ...d,
+    createdAt: d.createdAt.toISOString(),
+  }))
+
   // Get user's projects for sidebar
   const allProjects = await prisma.project.findMany({
     where: {
@@ -127,7 +137,7 @@ export default async function PillarDetailPage({
 
   return (
     <MainLayout projects={allProjects}>
-      <PillarDetailClient pillar={pillar} matches={matches} drafts={drafts} />
+      <PillarDetailClient pillar={pillar} matches={serializedMatches} drafts={serializedDrafts} />
     </MainLayout>
   )
 }

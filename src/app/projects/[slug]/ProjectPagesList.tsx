@@ -3,10 +3,20 @@
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import PageRow from './pages/PageRow'
+import PathTree from './PathTree'
+import { CONTENT_TYPE_LABELS, type ContentType } from '@/lib/utils/content-types'
 import styles from './ProjectPagesList.module.css'
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50]
 const DEFAULT_PAGE_SIZE = 10
+
+const CONTENT_TYPES: ContentType[] = [
+  'pillar_page',
+  'supporting_article',
+  'faq_page',
+  'glossary',
+  'comparison',
+]
 
 interface PageItem {
   id: string
@@ -14,6 +24,7 @@ interface PageItem {
   url: string
   title: string | null
   status: string
+  contentType?: string | null
   wordCount: number | null
   qualityScore: number | null
   detectedTopics: string[]
@@ -36,6 +47,8 @@ export default function ProjectPagesList({
   const [search, setSearch] = useState('')
   const [searchInput, setSearchInput] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('')
+  const [contentTypeFilter, setContentTypeFilter] = useState<string>('')
+  const [pathFilter, setPathFilter] = useState<string>('')
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
 
@@ -47,6 +60,8 @@ export default function ProjectPagesList({
       params.set('offset', String((page - 1) * pageSize))
       if (search) params.set('q', search)
       if (statusFilter) params.set('status', statusFilter)
+      if (contentTypeFilter) params.set('contentType', contentTypeFilter)
+      if (pathFilter) params.set('path', pathFilter)
       const res = await fetch(`/api/projects/${projectSlug}/pages?${params}`)
       if (!res.ok) throw new Error('Failed to fetch pages')
       const data = await res.json()
@@ -58,7 +73,7 @@ export default function ProjectPagesList({
     } finally {
       setLoading(false)
     }
-  }, [projectSlug, page, pageSize, search, statusFilter])
+  }, [projectSlug, page, pageSize, search, statusFilter, contentTypeFilter, pathFilter])
 
   useEffect(() => {
     fetchPages()
@@ -79,9 +94,16 @@ export default function ProjectPagesList({
     setPage(1)
   }
 
+  const handlePathSelect = (path: string) => {
+    setPathFilter(path === '/' ? '' : path)
+    setPage(1)
+  }
+
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
   const start = total === 0 ? 0 : (page - 1) * pageSize + 1
   const end = Math.min(page * pageSize, total)
+
+  const hasFilters = search || statusFilter || contentTypeFilter || pathFilter
 
   return (
     <section id="pages" className={styles.section}>
@@ -92,6 +114,16 @@ export default function ProjectPagesList({
         </p>
       </div>
 
+      <div className={styles.layout}>
+        <aside className={styles.sidebar}>
+          <PathTree
+            projectSlug={projectSlug}
+            selectedPath={pathFilter || '/'}
+            onPathSelect={handlePathSelect}
+          />
+        </aside>
+
+        <div className={styles.main}>
       <div className={styles.toolbar}>
         <form onSubmit={handleSearchSubmit} className={styles.searchForm}>
           <input
@@ -111,6 +143,22 @@ export default function ProjectPagesList({
             Status
           </label>
           <select
+            id="contentType-filter"
+            value={contentTypeFilter}
+            onChange={(e) => {
+              setContentTypeFilter(e.target.value)
+              setPage(1)
+            }}
+            className={styles.statusSelect}
+          >
+            <option value="">All types</option>
+            {CONTENT_TYPES.map((ct) => (
+              <option key={ct} value={ct}>
+                {CONTENT_TYPE_LABELS[ct]}
+              </option>
+            ))}
+          </select>
+          <select
             id="status-filter"
             value={statusFilter}
             onChange={(e) => {
@@ -119,9 +167,10 @@ export default function ProjectPagesList({
             }}
             className={styles.statusSelect}
           >
-            <option value="">All</option>
+            <option value="">All status</option>
             <option value="crawled">Crawled</option>
             <option value="analyzed">Analyzed</option>
+            <option value="archived">Archived</option>
             <option value="failed">Failed</option>
           </select>
           <label htmlFor="page-size" className={styles.filterLabel}>
@@ -150,11 +199,11 @@ export default function ProjectPagesList({
       ) : pages.length === 0 ? (
         <div className={styles.empty}>
           <p>
-            {search || statusFilter
+            {hasFilters
               ? 'No pages match your filters.'
               : 'No pages have been crawled yet.'}
           </p>
-          {!search && !statusFilter && (
+          {!hasFilters && (
             <Link href={`/projects/${projectSlug}/crawl`} className={styles.emptyButton}>
               Start Crawl
             </Link>
@@ -222,6 +271,8 @@ export default function ProjectPagesList({
           </div>
         </>
       )}
+        </div>
+      </div>
     </section>
   )
 }

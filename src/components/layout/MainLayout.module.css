@@ -10,18 +10,22 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  transition: margin-left 0.2s ease;
+}
+
+.mainExpanded {
+  margin-left: 56px;
 }
 
 .content {
   flex: 1;
   padding: 2rem;
-  max-width: 1400px;
   width: 100%;
-  margin: 0 auto;
 }
 
 @media (max-width: 768px) {
-  .main {
+  .main,
+  .mainExpanded {
     margin-left: 0;
   }
 

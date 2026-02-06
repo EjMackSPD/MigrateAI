@@ -18,6 +18,7 @@
 .main {
   flex: 1;
   min-width: 0;
+  overflow: visible;
 }
 
 .header {
@@ -102,7 +103,6 @@
   font-weight: 500;
 }
 
-.statusSelect,
 .pageSizeSelect {
   padding: 0.5rem 0.75rem;
   border: 1px solid #e2e8f0;
@@ -112,7 +112,6 @@
   color: #1a202c;
 }
 
-.statusSelect:focus,
 .pageSizeSelect:focus {
   outline: none;
   border-color: #667eea;
@@ -164,10 +163,12 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   overflow-x: auto;
   margin-bottom: 1rem;
+  width: 100%;
 }
 
 .table {
   width: 100%;
+  min-width: 700px;
   border-collapse: collapse;
 }
 
@@ -186,6 +187,10 @@
   border-bottom: 2px solid #e2e8f0;
 }
 
+.thumbCol {
+  width: 80px;
+}
+
 .table td {
   padding: 0.75rem 1rem;
   border-bottom: 1px solid #e2e8f0;
@@ -193,8 +198,61 @@
   font-size: 0.875rem;
 }
 
+.thumbCell {
+  width: 80px;
+  vertical-align: middle;
+}
+
+.thumb {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 4px;
+  background: #f1f5f9;
+}
+
+.thumbPlaceholder {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: #f1f5f9;
+  border-radius: 4px;
+  font-size: 1.25rem;
+}
+
+.thumbPlaceholder.hidden {
+  display: none;
+}
+
+.assetLink,
+.pageLink {
+  color: #667eea;
+  text-decoration: none;
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.assetLink:hover,
+.pageLink:hover {
+  text-decoration: underline;
+}
+
+.actionLink {
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.actionLink:hover {
+  text-decoration: underline;
+}
+
 .table tbody tr {
-  cursor: pointer;
   transition: background-color 0.2s;
 }
 
@@ -279,6 +337,16 @@
   .table td {
     padding: 0.5rem;
     font-size: 0.75rem;
+  }
+
+  .thumb {
+    width: 32px;
+    height: 32px;
+  }
+
+  .thumbPlaceholder {
+    width: 32px;
+    height: 32px;
   }
 
   .pagination {

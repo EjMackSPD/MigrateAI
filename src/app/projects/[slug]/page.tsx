@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db'
 import { getProjectBySlugWithDetails } from '@/lib/project-access'
 import { redirect, notFound } from 'next/navigation'
 import MainLayout from '@/components/layout/MainLayout'
+import type { WorkflowStage } from '@/lib/utils/workflow'
 import ProjectDetailClient from './ProjectDetailClient'
 
 export default async function ProjectDetailPage({
@@ -74,7 +75,10 @@ export default async function ProjectDetailPage({
 
   return (
     <MainLayout projects={allProjects}>
-      <ProjectDetailClient project={project} stats={stats} />
+      <ProjectDetailClient
+        project={{ ...project, workflowStage: project.workflowStage as WorkflowStage }}
+        stats={stats}
+      />
     </MainLayout>
   )
 }

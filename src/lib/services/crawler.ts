@@ -95,7 +95,7 @@ export class CrawlerService {
       // Extract links with anchor text
       let links: CrawledLink[] = []
       try {
-        links = await page.evaluate(() => {
+        const evaluated = await page.evaluate(() => {
           const anchors = Array.from(document.querySelectorAll('a[href]'))
           return anchors
             .map((a) => {
@@ -103,15 +103,17 @@ export class CrawlerService {
               const href = el.href
               if (!href || href.startsWith('javascript:')) return null
               const anchorText = el.textContent?.trim().slice(0, 500) || undefined
-              return { url: href, anchorText: anchorText || undefined }
+              return { url: href, anchorText }
             })
-            .filter((x): x is { url: string; anchorText?: string } => x !== null)
+            .filter((x) => x !== null)
         })
+        links = evaluated as CrawledLink[]
       } catch (evalError) {
         console.warn(`Could not extract links from ${url}, continuing with empty links`)
         links = []
       }
 
+      const normalizedUrl = this.normalizeUrl(url)
       const filteredUrls = this.filterLinks(
         links.map((l) => l.url),
         normalizedUrl,
@@ -129,8 +131,6 @@ export class CrawlerService {
         })
         .map((l) => ({ url: this.normalizeUrl(l.url), anchorText: l.anchorText }))
 
-      // Normalize URL (strip query string and hash) for consistent hashing
-      const normalizedUrl = this.normalizeUrl(url)
       const urlHash = createHash('sha256').update(normalizedUrl).digest('hex')
 
       return {

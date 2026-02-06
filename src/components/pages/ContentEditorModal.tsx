@@ -1,12 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { useToast } from '@/contexts/ToastContext'
 import styles from './ContentEditorModal.module.css'
 
-const MDEditor = dynamic(
-  () => import('@uiw/react-md-editor').then((mod) => mod.default),
+import '@toast-ui/editor/dist/toastui-editor.css'
+
+const Editor = dynamic(
+  () => import('@toast-ui/react-editor').then((mod) => mod.Editor),
   { ssr: false }
 )
 
@@ -26,7 +28,7 @@ export default function ContentEditorModal({
   onSuccess,
 }: ContentEditorModalProps) {
   const toast = useToast()
-  const [content, setContent] = useState(initialContent)
+  const editorRef = useRef<{ getInstance: () => { getMarkdown: () => string } } | null>(null)
   const [saving, setSaving] = useState(false)
   const [mounted, setMounted] = useState(false)
 
@@ -43,13 +45,14 @@ export default function ContentEditorModal({
   }, [onClose])
 
   const handleSave = async () => {
+    const markdown = editorRef.current?.getInstance?.()?.getMarkdown?.() ?? initialContent
     setSaving(true)
     try {
       const res = await fetch(`/api/pages/${pageId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          structuredContent: content ?? '',
+          structuredContent: markdown ?? '',
         }),
       })
       const data = await res.json()
@@ -65,10 +68,6 @@ export default function ContentEditorModal({
     } finally {
       setSaving(false)
     }
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') onClose()
   }
 
   return (
@@ -89,13 +88,13 @@ export default function ContentEditorModal({
               Edit content
             </h2>
             <button
-            type="button"
-            onClick={onClose}
-            className={styles.closeButton}
-            aria-label="Close"
-          >
-            ×
-          </button>
+              type="button"
+              onClick={onClose}
+              className={styles.closeButton}
+              aria-label="Close"
+            >
+              ×
+            </button>
           </div>
           {recommendations.length > 0 && (
             <div className={styles.tips}>
@@ -112,13 +111,13 @@ export default function ContentEditorModal({
 
         <div className={styles.editorWrap}>
           {mounted && (
-            <MDEditor
-              value={content}
-              onChange={(val) => setContent(val ?? '')}
-              height={420}
-              preview="live"
-              visibleDragbar={false}
-              data-color-mode="light"
+            <Editor
+              ref={editorRef}
+              initialValue={initialContent}
+              initialEditType="wysiwyg"
+              hideModeSwitch
+              height="420px"
+              useCommandShortcut
             />
           )}
         </div>

@@ -30,7 +30,7 @@ interface Pillar {
 
 interface Match {
   id: string
-  relevanceScore: number
+  relevanceScore: number | null
   page: {
     id: string
     url: string

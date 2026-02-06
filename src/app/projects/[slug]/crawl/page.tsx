@@ -76,7 +76,7 @@ export default function CrawlPage() {
             pendingWarningShownRef.current = true
             toast.showError(
               'Job is stuck in pending. Make sure workers are running! Run "npm run workers" in a separate terminal.',
-              { duration: 10000 }
+              10000
             )
           }
         }

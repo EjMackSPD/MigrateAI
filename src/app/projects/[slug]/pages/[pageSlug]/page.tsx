@@ -45,7 +45,7 @@ export default async function ProjectPageDetailPage({
     h1UniqueCount,
     wordCount: page.wordCount,
     contentType: page.contentType,
-    qualityScore: page.qualityScore,
+    qualityScore: page.qualityScore != null ? Number(page.qualityScore) : null,
     metaGaps,
     images: structure.images,
     hasStructuredContent: !!page.structuredContent,
@@ -100,7 +100,7 @@ export default async function ProjectPageDetailPage({
             wordCount: page.wordCount,
             contentType: page.contentType,
             detectedTopics: page.detectedTopics || [],
-            qualityScore: page.qualityScore,
+            qualityScore: page.qualityScore != null ? Number(page.qualityScore) : null,
           }}
         />
 

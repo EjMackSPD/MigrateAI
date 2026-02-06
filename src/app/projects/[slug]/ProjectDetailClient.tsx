@@ -11,6 +11,7 @@ import IngestionCrawlModal from '@/components/projects/IngestionCrawlModal'
 import ClearProjectModal from '@/components/projects/ClearProjectModal'
 import ProjectPagesList from './ProjectPagesList'
 import ProjectRedirectsList from './ProjectRedirectsList'
+import ProjectAssetsList from './ProjectAssetsList'
 import styles from './ProjectDetail.module.css'
 import type { WorkflowStage } from '@/lib/utils/workflow'
 
@@ -58,11 +59,27 @@ export default function ProjectDetailClient({
   const [showCrawlModal, setShowCrawlModal] = useState(false)
   const [showClearModal, setShowClearModal] = useState(false)
   const [currentProject, setCurrentProject] = useState(project)
+  const [activeTab, setActiveTab] = useState<'pages' | 'redirects' | 'assets'>('pages')
 
   // Sync from server when props change (e.g. after router.refresh() following clear data)
   useEffect(() => {
     setCurrentProject(project)
   }, [project])
+
+  // Sync tab from URL hash (#pages, #redirects, #assets)
+  useEffect(() => {
+    const hash = typeof window !== 'undefined' ? window.location.hash.slice(1) : ''
+    if (hash === 'pages' || hash === 'redirects' || hash === 'assets') {
+      setActiveTab(hash)
+    }
+  }, [])
+
+  const setTab = (tab: 'pages' | 'redirects' | 'assets') => {
+    setActiveTab(tab)
+    if (typeof window !== 'undefined') {
+      window.history.replaceState(null, '', `${window.location.pathname}#${tab}`)
+    }
+  }
 
   const isOwner = session?.user?.id === project.owner.id
 
@@ -155,23 +172,58 @@ export default function ProjectDetailClient({
           >
             View Pillars
           </Link>
-          <a href="#pages" className={styles.actionButton}>
-            Jump to Pages
-          </a>
-          <a href="#redirects" className={styles.actionButton}>
-            Jump to Redirects
-          </a>
         </div>
 
-        <ProjectPagesList
-          projectSlug={getProjectPath(currentProject)}
-          projectName={currentProject.name}
-        />
-
-        <ProjectRedirectsList
-          projectSlug={getProjectPath(currentProject)}
-          projectName={currentProject.name}
-        />
+        <div className={styles.tabs}>
+          <div className={styles.tabList}>
+            <button
+              type="button"
+              onClick={() => setTab('pages')}
+              className={`${styles.tab} ${activeTab === 'pages' ? styles.tabActive : ''}`}
+            >
+              Pages
+            </button>
+            <button
+              type="button"
+              onClick={() => setTab('redirects')}
+              className={`${styles.tab} ${activeTab === 'redirects' ? styles.tabActive : ''}`}
+            >
+              Redirects
+            </button>
+            <button
+              type="button"
+              onClick={() => setTab('assets')}
+              className={`${styles.tab} ${activeTab === 'assets' ? styles.tabActive : ''}`}
+            >
+              Assets
+            </button>
+          </div>
+          <div className={styles.tabPanel}>
+            {activeTab === 'pages' && (
+              <ProjectPagesList
+                projectSlug={getProjectPath(currentProject)}
+                projectName={currentProject.name}
+              />
+            )}
+            {activeTab === 'redirects' && (
+              <ProjectRedirectsList
+                projectSlug={getProjectPath(currentProject)}
+                projectName={currentProject.name}
+              />
+            )}
+            {activeTab === 'assets' && (
+              <ProjectAssetsList
+                projectSlug={getProjectPath(currentProject)}
+                projectName={currentProject.name}
+                project={{
+                  id: currentProject.id,
+                  slug: currentProject.slug,
+                  baseUrl: currentProject.baseUrl,
+                }}
+              />
+            )}
+          </div>
+        </div>
       </div>
 
       {showEditForm && (
@@ -190,6 +242,7 @@ export default function ProjectDetailClient({
 
       {showCrawlModal && (
         <IngestionCrawlModal
+          projectId={currentProject.id}
           projectSlug={getProjectPath(currentProject)}
           baseUrl={currentProject.baseUrl}
           projectName={currentProject.name}

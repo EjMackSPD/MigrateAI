@@ -8,7 +8,7 @@ import styles from './EditProjectForm.module.css'
 
 interface Project {
   id: string
-  slug: string
+  slug?: string
   name: string
   clientName: string
   baseUrl: string

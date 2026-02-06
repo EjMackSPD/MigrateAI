@@ -4,6 +4,16 @@ import { Prisma } from '@prisma/client'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { getProjectBySlug } from '@/lib/project-access'
+import { parsePageStructure } from '@/lib/utils/parse-page-structure'
+
+export interface AssetItem {
+  src: string
+  alt?: string
+  pageId: string
+  pageTitle: string | null
+  pageUrl: string
+  pageSlug: string | null
+}
 
 export async function GET(
   request: Request,
@@ -21,84 +31,81 @@ export async function GET(
     }
 
     const { searchParams } = new URL(request.url)
-    const status = searchParams.get('status')
-    const contentType = searchParams.get('contentType')?.trim() || ''
     const path = searchParams.get('path')?.trim() || ''
+    const pageId = searchParams.get('pageId')?.trim() || ''
     const q = searchParams.get('q')?.trim() || ''
-    const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '10', 10), 1), 100)
+    const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '50', 10), 1), 200)
     const offset = Math.max(parseInt(searchParams.get('offset') || '0', 10), 0)
 
-    const where: Record<string, unknown> = {
+    const where: Prisma.PageWhereInput = {
       projectId: project.id,
     }
 
-    if (status) {
-      where.status = status
-    }
-
-    if (contentType) {
-      where.contentType = contentType
+    if (pageId) {
+      where.id = pageId
     }
 
     if (path) {
       const base = (project.baseUrl || '').replace(/\/+$/, '')
       const pathNorm = path.startsWith('/') ? path : `/${path}`
       const prefix = base ? `${base}${pathNorm}` : pathNorm
-      where.AND = [
-        ...(Array.isArray(where.AND) ? where.AND : []),
-        {
-          OR: [
-            { url: { startsWith: prefix, mode: 'insensitive' } },
-            { url: { startsWith: `${prefix}/`, mode: 'insensitive' } },
-          ],
-        },
-      ]
-    }
-
-    if (q) {
-      where.AND = [
-        ...(Array.isArray(where.AND) ? where.AND : []),
-        {
-          OR: [
-            { title: { contains: q, mode: 'insensitive' } },
-            { url: { contains: q, mode: 'insensitive' } },
-          ],
-        },
+      where.OR = [
+        { url: { startsWith: prefix, mode: 'insensitive' } },
+        { url: { startsWith: `${prefix}/`, mode: 'insensitive' } },
       ]
     }
 
     const pages = await prisma.page.findMany({
-      where: where as Prisma.PageWhereInput,
+      where,
       select: {
         id: true,
         slug: true,
         url: true,
         title: true,
-        status: true,
-        contentType: true,
-        wordCount: true,
-        qualityScore: true,
-        detectedTopics: true,
-        crawledAt: true,
-        analyzedAt: true,
+        rawHtml: true,
       },
-      orderBy: {
-        crawledAt: 'desc',
-      },
-      take: limit,
-      skip: offset,
+      orderBy: { crawledAt: 'desc' },
     })
 
-    const total = await prisma.page.count({ where: where as Prisma.PageWhereInput })
+    const allAssets: AssetItem[] = []
+
+    for (const page of pages) {
+      if (!page.rawHtml) continue
+      const structure = parsePageStructure(page.rawHtml, page.url)
+      for (const img of structure.images) {
+        allAssets.push({
+          src: img.src,
+          alt: img.alt,
+          pageId: page.id,
+          pageTitle: page.title,
+          pageUrl: page.url,
+          pageSlug: page.slug,
+        })
+      }
+    }
+
+    let filtered = allAssets
+
+    if (q) {
+      const qLower = q.toLowerCase()
+      filtered = filtered.filter(
+        (a) =>
+          a.src.toLowerCase().includes(qLower) ||
+          (a.alt?.toLowerCase().includes(qLower) ?? false)
+      )
+    }
+
+    const total = filtered.length
+    const assets = filtered.slice(offset, offset + limit)
 
     return NextResponse.json({
-      pages,
+      assets,
       total,
       limit,
       offset,
     })
   } catch (error) {
-    console.error('Error fetching pages:', error)
+    console.error('Error fetching assets:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

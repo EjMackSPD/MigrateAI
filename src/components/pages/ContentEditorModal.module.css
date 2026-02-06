@@ -93,13 +93,13 @@
   padding: 1rem 1.25rem;
 }
 
-.editorWrap [data-color-mode] {
+.editorWrap :global(.toastui-editor-defaultUI) {
   border-radius: 6px;
   border: 1px solid #e2e8f0;
 }
 
-.editorWrap .w-md-editor {
-  box-shadow: none;
+.editorWrap :global(.ProseMirror) {
+  min-height: 380px;
 }
 
 .actions {
