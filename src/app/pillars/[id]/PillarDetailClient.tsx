@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useToast } from '@/contexts/ToastContext'
 import Link from 'next/link'
 import { formatContentType, getContentTypeIcon } from '@/lib/utils/content-types'
+import PercentageSlider, { PRESETS } from '@/components/common/PercentageSlider'
 import styles from './PillarDetail.module.css'
 
 interface Pillar {
@@ -65,6 +66,7 @@ export default function PillarDetailClient({
   const router = useRouter()
   const toast = useToast()
   const [startingMatch, setStartingMatch] = useState(false)
+  const [minRelevance, setMinRelevance] = useState(0.7)
 
   const handleFindMatches = async () => {
     setStartingMatch(true)
@@ -73,7 +75,7 @@ export default function PillarDetailClient({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          minRelevance: 0.7,
+          minRelevance,
           maxResults: 100,
         }),
       })
@@ -185,6 +187,14 @@ export default function PillarDetailClient({
 
           <div className={styles.actionsCard}>
             <h3 className={styles.actionsTitle}>Actions</h3>
+            <div className={styles.sliderWrap}>
+              <PercentageSlider
+                value={minRelevance}
+                onChange={setMinRelevance}
+                steps={PRESETS.relevance}
+                label="Min. match"
+              />
+            </div>
             <div className={styles.actionButtons}>
               <button
                 onClick={handleFindMatches}

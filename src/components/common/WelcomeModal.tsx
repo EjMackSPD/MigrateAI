@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useToast } from '@/contexts/ToastContext'
 import styles from './WelcomeModal.module.css'
 
 interface WelcomeModalProps {
@@ -10,49 +9,68 @@ interface WelcomeModalProps {
 }
 
 export default function WelcomeModal({ userName, onClose }: WelcomeModalProps) {
-  const toast = useToast()
   const [isVisible, setIsVisible] = useState(false)
+  const [featureIndex, setFeatureIndex] = useState(0)
 
   useEffect(() => {
-    // Trigger animation
-    setTimeout(() => setIsVisible(true), 100)
+    setTimeout(() => setIsVisible(true), 50)
   }, [])
+
+  useEffect(() => {
+    if (!isVisible) return
+    const timers: ReturnType<typeof setTimeout>[] = []
+    for (let i = 0; i < 3; i++) {
+      timers.push(setTimeout(() => setFeatureIndex(i + 1), 400 + i * 150))
+    }
+    return () => timers.forEach(clearTimeout)
+  }, [isVisible])
 
   const handleGetStarted = () => {
     setIsVisible(false)
-    setTimeout(() => onClose(), 300)
+    setTimeout(() => onClose(), 280)
   }
 
+  const features = [
+    { icon: '📁', text: 'Create your first project' },
+    { icon: '🕷️', text: 'Crawl and analyze websites' },
+    { icon: '✨', text: 'Generate GEO-optimized content' },
+  ]
+
   return (
-    <div className={`${styles.overlay} ${isVisible ? styles.visible : ''}`} onClick={handleGetStarted}>
-      <div className={`${styles.modal} ${isVisible ? styles.visible : ''}`} onClick={(e) => e.stopPropagation()}>
+    <div
+      className={`${styles.overlay} ${isVisible ? styles.visible : ''}`}
+      onClick={handleGetStarted}
+    >
+      <div
+        className={`${styles.modal} ${isVisible ? styles.visible : ''}`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className={styles.glow} />
         <div className={styles.content}>
-          <div className={styles.icon}>
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-              <polyline points="22 4 12 14.01 9 11.01"></polyline>
-            </svg>
+          <div className={styles.iconWrap}>
+            <div className={styles.icon}>
+              <span className={styles.wave}>👋</span>
+            </div>
           </div>
-          <h2 className={styles.title}>Welcome{userName ? `, ${userName}` : ''}!</h2>
+          <h2 className={styles.title}>
+            Welcome{userName ? `, ${userName}` : ''}!
+          </h2>
           <p className={styles.message}>
-            Your account has been created successfully. You&apos;re all set to start migrating and transforming content.
+            Your account is ready. Let&apos;s turn your content migration into a breeze.
           </p>
           <div className={styles.features}>
-            <div className={styles.featureItem}>
-              <span className={styles.checkmark}>✓</span>
-              <span>Create your first project</span>
-            </div>
-            <div className={styles.featureItem}>
-              <span className={styles.checkmark}>✓</span>
-              <span>Start crawling websites</span>
-            </div>
-            <div className={styles.featureItem}>
-              <span className={styles.checkmark}>✓</span>
-              <span>Generate GEO-optimized content</span>
-            </div>
+            {features.map((f, i) => (
+              <div
+                key={i}
+                className={`${styles.featureItem} ${featureIndex > i ? styles.featureVisible : ''}`}
+              >
+                <span className={styles.featureIcon}>{f.icon}</span>
+                <span>{f.text}</span>
+              </div>
+            ))}
           </div>
           <button onClick={handleGetStarted} className={styles.button}>
-            Get Started
+            Let&apos;s Go →
           </button>
         </div>
       </div>

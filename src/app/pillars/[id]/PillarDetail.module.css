@@ -180,6 +180,10 @@
   color: #718096;
 }
 
+.sliderWrap {
+  margin-bottom: 1rem;
+}
+
 .actionButtons {
   display: flex;
   flex-direction: column;
